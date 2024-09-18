@@ -3,18 +3,26 @@ package com.readmate.ReadMate.login.service;
 import com.readmate.ReadMate.login.entity.RefreshToken;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.RefreshTokenRepository;
+import com.readmate.ReadMate.login.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.SignatureException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
-public class TokenService { //JWT 기반의 인증 및 토큰 관리를 담당
+public class TokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final String secretKey = "5E7EA62366FA799E66349E82FBAB7"; //JWT secretKey
+    private final UserRepository userRepository;
+
+    @Value("${jwt.secret.key}")
+    private String secretKey;
 
     // AccessToken 생성
     public String createAccessToken(User user) {
@@ -42,7 +50,7 @@ public class TokenService { //JWT 기반의 인증 및 토큰 관리를 담당
         refreshTokenRepository.save(token);
     }
 
-    //RefreshToken이용하여 AccessToken 재발급
+    //RefreshToken 이용하여 AccessToken 재발급
     public String renewAccessToken(String refreshToken) {
         RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken).orElse(null);
         if (token == null) {
@@ -60,4 +68,47 @@ public class TokenService { //JWT 기반의 인증 및 토큰 관리를 담당
         }
         return null;
     }
+
+    // AccessToken을 이용하여 유저 정보 조회
+    public User getUserFromAccessToken(String accessToken) {
+        try {
+            // AccessToken에서 Claims(페이로드) 추출
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(accessToken)
+                    .getBody();
+
+            // Claims에서 이메일 추출
+            String email = claims.getSubject();
+
+            // 이메일로 유저 조회
+            return userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        } catch (SignatureException e) {
+            // 토큰이 유효하지 않거나 서명이 일치하지 않을 경우 예외 처리
+            throw new RuntimeException("Invalid access token");
+        }
+    }
+
+////    // 2. 토큰에서 유저 정보 추출
+////    public User getUserFromToken(String token) {
+////        // 토큰 파싱해서 subject(이메일) 추출
+////        Claims claims = Jwts.parser()
+////                .setSigningKey(secretKey)  // secretKey를 사용하여 서명 검증
+////                .parseClaimsJws(token)     // 토큰을 파싱
+////                .getBody();                // claim에서 body 부분 추출
+////
+////        String email = claims.getSubject();  // 토큰의 subject에서 이메일 추출
+////
+////        return userRepository.findByEmail(email).orElseThrow(
+////                () -> new IllegalArgumentException("유효하지 않은 토큰입니다.")
+////        );
+////    }
+//
+//    // 토큰에서 유저 정보 추출
+//    public String getUserFromToken(String token) {
+//        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
+//    }
+
 }

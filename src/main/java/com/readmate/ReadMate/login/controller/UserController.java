@@ -38,12 +38,11 @@ public class UserController {
     //1. 카카오톡 회원가입 및 로그인
     //1.1 DB에 해당 유저의 정보가 없을 경우 -> 회원가입절차로 DB에 유저 정보 저장
     //1.2 DB에 해당 유저의 정보가 있을 경우 -> 로그인
-
     @GetMapping("/login/kakao")
     @Operation(summary = "회원가입 및 로그인", description = "유저의 정보가 있을 시 회원가입, 없을 시 로그인을 실시하는 API")
     public ResponseEntity<BasicResponse<String>> kakaoLogin(
             @RequestParam(name = "code") String code,
-            @RequestBody KakaoLoginRequest kakaoLoginRequest) {
+            @RequestBody(required = false) KakaoLoginRequest kakaoLoginRequest) {
 
         try {
             // code로 accessToken 획득
@@ -52,39 +51,43 @@ public class UserController {
             // accessToken으로 유저 정보 가져오기
             User kakaoUser = userService.getKakaoUser(accessToken);
 
-            String nickname = kakaoLoginRequest.getNickname();
-            userService.validateNickname(nickname);
-
-            // 카카오 유저에 닉네임과 추가 정보 설정
-            kakaoUser.setNickname(nickname);
-            kakaoUser.setContent(kakaoLoginRequest.getContent());
-            kakaoUser.setFavoriteGenre(kakaoLoginRequest.getFavoriteGenre());
-
             User user = userService.findByEmail(kakaoUser.getEmail());
 
-            boolean isNewUser = (user == null);
-            String message;
-
-            if (isNewUser) {
+            if (user == null) {
                 // 신규 사용자일 경우 회원가입
+                if (kakaoLoginRequest == null) {
+                    // Body가 없으면 사용자 등록을 위해 적절한 메시지 반환
+                    return ResponseEntity.badRequest()
+                            .body(BasicResponse.ofFailure("Body 정보가 필요합니다.", HttpStatus.BAD_REQUEST));
+                }
+
+                String nickname = kakaoLoginRequest.getNickname();
+                userService.validateNickname(nickname);
+
+                kakaoUser.setNickname(nickname);
+                kakaoUser.setContent(kakaoLoginRequest.getContent());
+                kakaoUser.setFavoriteGenre(kakaoLoginRequest.getFavoriteGenre());
+
                 user = userService.signup(kakaoUser);
 
                 String refreshToken = tokenService.createRefreshToken(user);
                 tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
-                message = "회원가입 성공";
+
+                BasicResponse<String> response = BasicResponse.ofSuccess("회원가입 성공");
+                return ResponseEntity.ok(response);
 
             } else {
+                // 기존 사용자일 경우 로그인 처리
                 String refreshToken = tokenService.getRefreshToken(user);
 
                 if (refreshToken == null) {
                     refreshToken = tokenService.createRefreshToken(user);
                     tokenService.saveRefreshToken(user, refreshToken);
                 }
-                message = "로그인 성공";
-            }
 
-            BasicResponse<String> response = BasicResponse.ofSuccess(message);
-            return ResponseEntity.ok(response);
+                BasicResponse<String> response = BasicResponse.ofSuccess("로그인 성공");
+                return ResponseEntity.ok(response);
+            }
 
         } catch (Exception e) {
             BasicResponse<String> response = BasicResponse.ofFailure("처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);

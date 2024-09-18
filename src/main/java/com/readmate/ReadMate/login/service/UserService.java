@@ -131,8 +131,7 @@ public class UserService {
         }
     }
 
-    //회원 탈퇴
-    // Kakao 회원탈퇴 메소드
+    //회원 탈퇴 -> Kakao 회원탈퇴 메소드
     public void withdraw(String authorizationHeader, Long userId) {
 
         Optional<User> optionalUser = userRepository.findByUserId(userId);
@@ -167,7 +166,6 @@ public class UserService {
                 throw new RuntimeException("Kakao 연결 끊기 실패: " + response.getStatusCode());
             }
         } else {
-            System.out.println("User not found with userId: " + userId);
             throw new RuntimeException("유저를 찾을 수 없습니다.");
         }
     }
@@ -175,4 +173,6 @@ public class UserService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
+
+
 }
