@@ -1,6 +1,7 @@
 package com.readmate.ReadMate.bookclub.dto.res;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.readmate.ReadMate.common.genre.Genre;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.List;
 
 
 @Getter
@@ -21,6 +23,8 @@ public class BookClubListResponse {
     private Long bookClubID;
     private String bookClubName;
     private String description;
+
+    private List<Genre> bookClubGenres;
 
     private Long bookClubImageID;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")

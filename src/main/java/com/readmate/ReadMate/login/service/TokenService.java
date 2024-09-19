@@ -6,6 +6,7 @@ import com.readmate.ReadMate.login.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.Date;
 
@@ -14,7 +15,8 @@ import java.util.Date;
 public class TokenService { //JWT 기반의 인증 및 토큰 관리를 담당
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final String secretKey = "5E7EA62366FA799E66349E82FBAB7"; //JWT secretKey
+    @Value("${jwt.secret-key}")
+    private String secretKey; //JWT secretKey
 
     // AccessToken 생성
     public String createAccessToken(User user) {

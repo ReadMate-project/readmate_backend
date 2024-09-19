@@ -51,6 +51,8 @@ public class BookClubResponse {
 
     private List<BookClubBookResponse> bookClubBooks;
 
+    private String bookClubKey;
+
 
 
     public void createBookClubResponse(BookClub bookClub,  List<BookClubBookResponse> bookClubBooks) {
@@ -67,6 +69,7 @@ public class BookClubResponse {
         this.isPublic = bookClub.getIsPublic();
         this.recruitmentEndDate = bookClub.getRecruitmentEndDate();
         this.recruitmentStartDate = bookClub.getRecruitmentStartDate();
+        this.bookClubKey = bookClub.getBookClubKey();
 
     }
 

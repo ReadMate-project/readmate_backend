@@ -1,7 +1,6 @@
     package com.readmate.ReadMate.bookclub.service;
 
 
-    import com.fasterxml.jackson.databind.ObjectMapper;
     import com.readmate.ReadMate.bookclub.dto.req.BookClubRequest;
     import com.readmate.ReadMate.bookclub.dto.res.BookClubBookResponse;
     import com.readmate.ReadMate.bookclub.dto.res.BookClubListResponse;
@@ -12,12 +11,17 @@
     import com.readmate.ReadMate.bookclub.repository.BookClubRepository;
     import com.readmate.ReadMate.common.exception.CustomException;
     import com.readmate.ReadMate.common.exception.enums.ErrorCode;
+    import com.readmate.ReadMate.login.entity.User;
+    import io.jsonwebtoken.Jwts;
+    import io.jsonwebtoken.SignatureAlgorithm;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
+    import org.springframework.beans.factory.annotation.Value;
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
     import java.util.List;
+    import java.util.UUID;
     import java.util.stream.Collectors;
 
 
@@ -27,13 +31,17 @@
     public class BookClubService {
 
         private final BookClubRepository bookClubRepository;
-
         private final BookClubBookRepository bookClubBookRepository;
 
         public Long createClub(BookClubRequest clubRequest) {
 
             BookClub bookClub = new BookClub();
             bookClub.updateBookClub(clubRequest);
+
+            // 북클럽 키 생성 후, BookClub 객체에 설정
+            String bookClubKey = createBookClubKey();
+            bookClub.setBookClubKey(bookClubKey);
+
             BookClub savedBookClub = bookClubRepository.save(bookClub);
 
             // BookClubBook 리스트 생성 후, bookClub 설정
@@ -46,6 +54,10 @@
 
             bookClubBookRepository.saveAll(bookClubBooks);
             return savedBookClub.getBookClubId();
+        }
+
+        public String createBookClubKey() {
+            return UUID.randomUUID().toString().substring(0, 15); // 30글자의 짧은 UUID
         }
 
         @Transactional
@@ -84,7 +96,6 @@
             } else {
                 throw new IllegalArgumentException("Invalid bookClub ID provided.");
             }
-
         }
 
         public String deleteClub(Long clubId) {
@@ -116,6 +127,9 @@
                             .bookClubImageID(bookClub.getBookClubImageID())
                             .startDate(bookClub.getStartDate())
                             .endDate(bookClub.getEndDate())
+                            .recruitmentStartDate(bookClub.getRecruitmentStartDate())
+                            .recruitmentEndDate(bookClub.getRecruitmentEndDate())
+                            .bookClubGenres(bookClub.getBookClubGenre())
                             .build())
                     .toList();
             return responses;

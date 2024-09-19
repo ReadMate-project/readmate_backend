@@ -10,8 +10,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
-
 @Entity
 @Builder
 @Getter
@@ -78,6 +76,8 @@ public class BookClub {
     @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
     @Builder.Default
     private String delYn = "N";
+    @Column(name = "book_club_key")
+    private String bookClubKey;
 
     public void updateBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());
@@ -98,4 +98,6 @@ public class BookClub {
     public void delete(){
         this.delYn = "Y";
     }
+
+
 }
