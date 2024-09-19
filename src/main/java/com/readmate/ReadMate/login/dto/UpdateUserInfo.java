@@ -1,10 +1,10 @@
 package com.readmate.ReadMate.login.dto;
 
-import com.readmate.ReadMate.login.entity.FavoriteGenre;
+import com.readmate.ReadMate.common.genre.Genre;
 
 public class UpdateUserInfo { //마이페이지 -> 정보 수정 시 사용
     private String nickname;
-    private FavoriteGenre favoriteGenre;
+    private Genre favoriteGenre;
     private String profileImageUrl;
     private String content;
 
@@ -16,11 +16,11 @@ public class UpdateUserInfo { //마이페이지 -> 정보 수정 시 사용
         this.nickname = nickname;
     }
 
-    public FavoriteGenre getFavoriteGenre() {
+    public Genre getFavoriteGenre() {
         return favoriteGenre;
     }
 
-    public void setFavoriteGenre(FavoriteGenre favoriteGenre) {
+    public void setFavoriteGenre(Genre favoriteGenre) {
         this.favoriteGenre = favoriteGenre;
     }
 
