@@ -48,7 +48,7 @@ public class BookClub {
     @NotNull
     @Column(name = "is_public", nullable = false)
     @Builder.Default
-    private Boolean isPublic = true; // Default value as true
+    private Boolean isPublic = true;
 
     @NotNull
     @Column(name = "start_date")
@@ -60,6 +60,20 @@ public class BookClub {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Builder.Default
     private LocalDate endDate = LocalDate.now().plusMonths(1); // Default to one month later
+
+
+    // 모집 기간
+    @NotNull
+    @Column(name = "recruitment_start_date")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Builder.Default
+    private LocalDate recruitmentStartDate = LocalDate.now(); // Default to today's date
+
+
+    @Column(name = "recruitment_end_date")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Builder.Default
+    private LocalDate recruitmentEndDate = LocalDate.now().plusMonths(1); // Default to one month later
 
     @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
     @Builder.Default
@@ -75,6 +89,10 @@ public class BookClub {
         this.setStartDate(clubRequest.getStartDate() != null ? clubRequest.getStartDate() : LocalDate.now());
         this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
         this.setBookClubGenre(clubRequest.getBookClubGenre());
+
+        this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
+        this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
+
     }
 
     public void delete(){
