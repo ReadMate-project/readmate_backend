@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -31,15 +33,13 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = FavoriteGenreConverter.class)
     @Column(name = "favorite_genre")
-    private FavoriteGenre favoriteGenre; //로그인 할때 내가 설정할 수 있도록 -> 복수개 선택 가능
+    private List<FavoriteGenre> favoriteGenre; //로그인 할때 내가 설정할 수 있도록 -> 복수개 선택 가능
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;  // 프로필 이미지 URL
 
     @Column
     private String content;  //한줄 소개
-
-
 }

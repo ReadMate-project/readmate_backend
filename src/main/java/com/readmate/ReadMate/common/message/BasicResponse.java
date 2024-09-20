@@ -28,4 +28,10 @@ public class BasicResponse<T>{
     public static <T> BasicResponse<T> ofCreateSuccess(T data){
         return new BasicResponse<>(SUCCESS, HttpStatus.CREATED.value(), data);
     }
+
+    public static <T> BasicResponse<T> ofError(String message, int statusCode) {
+        return new BasicResponse<>(message, statusCode, null);
+    }
+
+
 }
