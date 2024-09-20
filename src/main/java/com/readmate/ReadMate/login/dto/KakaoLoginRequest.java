@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,5 +18,5 @@ public class KakaoLoginRequest {
 
     private String nickname;
     private String content;
-    private FavoriteGenre favoriteGenre;
+    private List<FavoriteGenre> favoriteGenre;
 }

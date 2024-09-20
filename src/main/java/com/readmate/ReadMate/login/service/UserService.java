@@ -3,19 +3,15 @@ package com.readmate.ReadMate.login.service;
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import com.nimbusds.jose.shaded.gson.JsonParser;
 import com.readmate.ReadMate.login.dto.KakaoTokenResponse;
-import com.readmate.ReadMate.login.entity.RefreshToken;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.RefreshTokenRepository;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
@@ -174,5 +170,7 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-
+    public Optional<User> findUserById(Long userId) {
+        return userRepository.findById(userId);
+    }
 }
