@@ -22,7 +22,7 @@ public class TokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
 
-    @Value("${jwt.secret.key}")
+    @Value("${jwt.secret-key}")
     private String secretKey;
 
     // AccessToken 생성
