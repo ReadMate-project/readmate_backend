@@ -3,19 +3,15 @@ package com.readmate.ReadMate.login.service;
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import com.nimbusds.jose.shaded.gson.JsonParser;
 import com.readmate.ReadMate.login.dto.KakaoTokenResponse;
-import com.readmate.ReadMate.login.entity.RefreshToken;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.RefreshTokenRepository;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
@@ -131,8 +127,7 @@ public class UserService {
         }
     }
 
-    //회원 탈퇴
-    // Kakao 회원탈퇴 메소드
+    //회원 탈퇴 -> Kakao 회원탈퇴 메소드
     public void withdraw(String authorizationHeader, Long userId) {
 
         Optional<User> optionalUser = userRepository.findByUserId(userId);
@@ -167,12 +162,15 @@ public class UserService {
                 throw new RuntimeException("Kakao 연결 끊기 실패: " + response.getStatusCode());
             }
         } else {
-            System.out.println("User not found with userId: " + userId);
             throw new RuntimeException("유저를 찾을 수 없습니다.");
         }
     }
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    public Optional<User> findUserById(Long userId) {
+        return userRepository.findById(userId);
     }
 }

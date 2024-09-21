@@ -35,7 +35,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Convert(converter = GenreConverter.class)
+    @Convert(converter = FavoriteGenreConverter.class)
     @Column(name = "favorite_genre")
     private List<Genre> favoriteGenre;
 
@@ -44,6 +44,4 @@ public class User {
 
     @Column
     private String content;  //한줄 소개
-
-
 }

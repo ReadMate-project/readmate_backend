@@ -6,6 +6,7 @@ import com.readmate.ReadMate.login.dto.KakaoLoginRequest;
 import com.readmate.ReadMate.login.dto.KakaoTokenRequest;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
+import com.readmate.ReadMate.login.security.CustomUserDetails;
 import com.readmate.ReadMate.login.service.TokenService;
 import com.readmate.ReadMate.login.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,10 +16,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Controller
@@ -43,7 +49,7 @@ public class UserController {
     @Operation(summary = "회원가입 및 로그인", description = "유저의 정보가 있을 시 회원가입, 없을 시 로그인을 실시하는 API")
     public ResponseEntity<BasicResponse<String>> kakaoLogin(
             @RequestParam(name = "code") String code,
-            @RequestBody KakaoLoginRequest kakaoLoginRequest) {
+            @RequestBody(required = false) KakaoLoginRequest kakaoLoginRequest) {
 
         try {
             // code로 accessToken 획득
@@ -52,47 +58,52 @@ public class UserController {
             // accessToken으로 유저 정보 가져오기
             User kakaoUser = userService.getKakaoUser(accessToken);
 
-            String nickname = kakaoLoginRequest.getNickname();
-            userService.validateNickname(nickname);
-
-            // 카카오 유저에 닉네임과 추가 정보 설정
-            kakaoUser.setNickname(nickname);
-            kakaoUser.setContent(kakaoLoginRequest.getContent());
-            kakaoUser.setFavoriteGenre(kakaoLoginRequest.getFavoriteGenre());
-
             User user = userService.findByEmail(kakaoUser.getEmail());
 
-            boolean isNewUser = (user == null);
-            String message;
-
-            if (isNewUser) {
+            if (user == null) {
                 // 신규 사용자일 경우 회원가입
-                user = userService.signup(kakaoUser);
+                if (kakaoLoginRequest == null) {
+                    return ResponseEntity.badRequest()
+                            .body(BasicResponse.ofFailure("Body 정보가 필요합니다.", HttpStatus.BAD_REQUEST));
+                }
 
+                String nickname = kakaoLoginRequest.getNickname();
+                userService.validateNickname(nickname);
+
+                kakaoUser.setNickname(nickname);
+                kakaoUser.setContent(kakaoLoginRequest.getContent());
+                kakaoUser.setFavoriteGenre(kakaoLoginRequest.getFavoriteGenre());
+
+                user = userService.signup(kakaoUser);
                 String refreshToken = tokenService.createRefreshToken(user);
                 tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
-                message = "회원가입 성공";
+
+                BasicResponse<String> response = BasicResponse.ofSuccess("회원가입 성공");
+                return ResponseEntity.ok(response);
 
             } else {
+                // 기존 사용자일 경우 로그인 처리
                 String refreshToken = tokenService.getRefreshToken(user);
 
                 if (refreshToken == null) {
                     refreshToken = tokenService.createRefreshToken(user);
-                    tokenService.saveRefreshToken(user, refreshToken);
+                    tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
                 }
-                message = "로그인 성공";
-            }
 
-            BasicResponse<String> response = BasicResponse.ofSuccess(message);
-            return ResponseEntity.ok(response);
+                // 사용자 인증 처리
+                CustomUserDetails userDetails = new CustomUserDetails(user);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                BasicResponse<String> response = BasicResponse.ofSuccess("로그인 성공");
+                return ResponseEntity.ok(response);
+            }
 
         } catch (Exception e) {
             BasicResponse<String> response = BasicResponse.ofFailure("처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-
 
 
     // 2. 로그아웃
@@ -158,6 +169,22 @@ public class UserController {
 
         BasicResponse<String> response = BasicResponse.ofSuccess("새로운 AccessToken: " + newAccessToken);
         return ResponseEntity.ok(response);
+    }
+
+
+    //5. 로그인 된 유저 정보 가지고 오기
+    @GetMapping("/userInfo")
+    @Operation(summary = "현재 사용자 정보 가져오기", description = "현재 인증된 사용자 정보를 가져오는 API")
+    public ResponseEntity<BasicResponse<User>> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+
+//        //현재 인증된 사용자 정보 출력을 위한 것
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        System.out.println("현재 인증된 사용자: " + authentication.getPrincipal());
+
+        //인증된 사용자 정보 가지고 오기
+        User user = userDetails.getUser();
+        return ResponseEntity.ok(BasicResponse.ofSuccess(user));
     }
 
 

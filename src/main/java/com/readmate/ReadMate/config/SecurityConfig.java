@@ -1,73 +1,66 @@
 package com.readmate.ReadMate.config;
 
+
+import com.readmate.ReadMate.login.security.CustomUserDetailsService;
+import com.readmate.ReadMate.login.security.JwtAuthenticationFilter;
+import com.readmate.ReadMate.login.service.TokenService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.disable()) // Frame options 비활성화
+                .csrf(csrfConfig -> csrfConfig.disable())
+                .headers(headerConfig -> headerConfig.frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()))
+                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers(URL_TO_PERMIT).permitAll()
+                        .anyRequest().authenticated()
                 )
-                .securityContext(securityContext -> securityContext
-                        .requireExplicitSave(false) // SecurityContext의 명시적 저장 비활성화
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Stateless 세션 정책
-                )
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(
-                                "/api/v1/**", "/v2/api-docs",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**",
-                                "/swagger-resources",
-                                "/swagger-resources/**",
-                                "/configuration/ui",
-                                "/configuration/security",
-                                "/swagger-ui/**",
-                                "/webjars/**",
-                                "/swagger-ui.html"
-                        ).permitAll() // 허용된 요청 경로
-                        .anyRequest().authenticated() // 그 외의 요청은 인증 필요
-                )
-                .formLogin(form -> form.disable()) // Form login 비활성화
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())); // CORS 설정
+
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new JwtAuthenticationFilter(customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    private static final String[] URL_TO_PERMIT = {
+            "/member/login",
+            "/member/signup",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/auth/**",
+            "/api/v1/**",
+            "/api/token/**"
+    };
 
+    private final CustomUserDetailsService customUserDetailsService;
+    private final TokenService tokenService;
 
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*"); // 모든 도메인,헤더,HTTP메소드 허용
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        source.registerCorsConfiguration("/**", config);
-        return source;
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(customUserDetailsService);
+        provider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+        return provider;
     }
 
-//    @Bean
-//    public PasswordEncoder passwordEncoder(){
-//        return new BCryptPasswordEncoder(); //해시 암호화 알고리즘
-//    }
 
 }
+
