@@ -3,6 +3,7 @@ package com.readmate.ReadMate.bookclub.entity;
 import com.readmate.ReadMate.bookclub.dto.req.BookClubRequest;
 import com.readmate.ReadMate.common.genre.Genre;
 import com.readmate.ReadMate.common.genre.GenreConverter;
+import com.readmate.ReadMate.login.security.CustomUserDetails;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -78,6 +79,21 @@ public class BookClub {
     private String delYn = "N";
     @Column(name = "book_club_key")
     private String bookClubKey;
+
+    public void createBookClub(BookClubRequest clubRequest){
+        this.setBookClubName(clubRequest.getBookClubName());
+        this.setIsPublic(clubRequest.isPublic());
+        this.setBookClubImageID(clubRequest.getBookClubImageId());
+        this.setDescription(clubRequest.getDescription());
+        this.setNotify(clubRequest.getNotify());
+        this.setStartDate(clubRequest.getStartDate() != null ? clubRequest.getStartDate() : LocalDate.now());
+        this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
+        this.setBookClubGenre(clubRequest.getBookClubGenre());
+
+        this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
+        this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
+
+    }
 
     public void updateBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());

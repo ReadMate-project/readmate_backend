@@ -35,6 +35,7 @@ public enum ErrorCode {
 
     ALREADY_DELETED(409, "CLUB002", "이미 삭제된 클럽입니다."),
 
+
     // COMMENT
     INVALID_COMMENT(404, "COMMENT001", "존재하지 않는 댓글입니다.");
 
