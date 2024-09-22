@@ -24,7 +24,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.Collections;
 import java.util.Optional;
 
 @Controller
@@ -90,12 +89,17 @@ public class UserController {
                     tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
                 }
 
+                String newAccessToken  = tokenService.renewAccessToken(refreshToken);
+
+
                 // 사용자 인증 처리
                 CustomUserDetails userDetails = new CustomUserDetails(user);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                BasicResponse<String> response = BasicResponse.ofSuccess("로그인 성공");
+                String tokenInfo = String.format("Access Token: %s, Refresh Token: %s", newAccessToken, refreshToken);
+                BasicResponse<String> response = BasicResponse.ofSuccess(tokenInfo, "로그인 성공");
+
                 return ResponseEntity.ok(response);
             }
 

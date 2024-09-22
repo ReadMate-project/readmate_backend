@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class TokenRequest {
     private String accessToken;
 
-    // Getter and Setter
     public String getAccessToken() {
         return accessToken;
     }
