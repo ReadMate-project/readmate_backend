@@ -1,5 +1,7 @@
 package com.readmate.ReadMate.login.entity;
 
+import com.readmate.ReadMate.common.genre.Genre;
+import com.readmate.ReadMate.common.genre.GenreConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,7 +37,7 @@ public class User {
 
     @Convert(converter = FavoriteGenreConverter.class)
     @Column(name = "favorite_genre")
-    private List<FavoriteGenre> favoriteGenre; //로그인 할때 내가 설정할 수 있도록 -> 복수개 선택 가능
+    private List<Genre> favoriteGenre;
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;  // 프로필 이미지 URL

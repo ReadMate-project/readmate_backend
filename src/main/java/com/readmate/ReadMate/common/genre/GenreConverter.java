@@ -1,6 +1,6 @@
-package com.readmate.ReadMate.login.entity;
+package com.readmate.ReadMate.common.genre;
 
-import com.readmate.ReadMate.common.genre.Genre;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
@@ -8,8 +8,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Converter
-public class FavoriteGenreConverter implements AttributeConverter<List<Genre>, String> {
+public class GenreConverter implements AttributeConverter<List<Genre>,String> {
+
     private static final String SPLIT_CHAR = ",";
 
     @Override
@@ -31,4 +33,5 @@ public class FavoriteGenreConverter implements AttributeConverter<List<Genre>, S
                 .map(Genre::valueOf)
                 .collect(Collectors.toList());
     }
+
 }

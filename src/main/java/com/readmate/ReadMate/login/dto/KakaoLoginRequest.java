@@ -1,6 +1,6 @@
 package com.readmate.ReadMate.login.dto;
 
-import com.readmate.ReadMate.login.entity.FavoriteGenre;
+import com.readmate.ReadMate.common.genre.Genre;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -18,5 +18,5 @@ public class KakaoLoginRequest {
 
     private String nickname;
     private String content;
-    private List<FavoriteGenre> favoriteGenre;
+    private List<Genre> favoriteGenre;
 }

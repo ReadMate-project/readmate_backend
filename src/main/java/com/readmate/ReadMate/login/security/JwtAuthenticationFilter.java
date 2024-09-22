@@ -24,7 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final CustomUserDetailsService userDetailsService;
 
-    @Value("${jwt.secret.key}")
+    @Value("${jwt.secret-key}")
     private String secretKey; //JWT SecretKey
 
     @Override
