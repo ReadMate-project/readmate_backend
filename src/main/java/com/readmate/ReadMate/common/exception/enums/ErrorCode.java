@@ -33,7 +33,10 @@ public enum ErrorCode {
 
     INVALID_GENRE_FORMAT(501,"CLUB002" , "변환에 실패 했습니다"),
 
-    ALREADY_DELETED(409, "CLUB002", "이미 삭제된 클럽입니다."),
+    ALREADY_DELETED(409, "CLUB003", "이미 삭제된 클럽입니다."),
+
+    ALREADY_JOINED(409, "CLUB004", "이미 가입한 클럽입니다."),
+    NOT_MEMBER(409, "CLUB005", "가입하지 않은 클럽입니다."),
 
 
     // COMMENT
