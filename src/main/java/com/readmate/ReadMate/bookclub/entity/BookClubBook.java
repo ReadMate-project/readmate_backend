@@ -23,7 +23,6 @@ public class BookClubBook {
     @JoinColumn(name = "book_club_id")
     private BookClub bookClub;
 
-    @Column(name = "is_active")
     @Builder.Default
     private boolean isActive = true;
 
