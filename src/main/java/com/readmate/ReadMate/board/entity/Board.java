@@ -27,18 +27,11 @@ public class Board {
     @Column(name = "type")
     private BoardType boardType;
 
-    // isbn13를 저장할건가,,?
     @Column(name = "book_id")
     private Long bookId;
 
-    @Column(name = "bookclub_id") //CLUB_BOARD때문에 그런듯
+    @Column(name = "bookclub_id") //CLUB_BOARD 때문에
     private Long bookclubId;
-
-    @Column(name = "total_pages") //알라딘에서 제공해주는 총 페이지 가지고 와서 사용할 것
-    private Integer totalPages;
-
-    @Column(name = "current_page") //내가 작성할 부분
-    private Integer currentPage;
 
     //게시판 본문에 해당하는 내용
     //사진은 따로 Image로 구현할거임
@@ -50,8 +43,5 @@ public class Board {
 
     @Column(name = "title")
     private String title;
-
-    @Column(name = "likes") //게시글에 좋아요 누른 총 수
-    private Long likes;
 
 }

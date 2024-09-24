@@ -1,10 +1,15 @@
 package com.readmate.ReadMate.board.service;
 
 import com.readmate.ReadMate.board.entity.Board;
+import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,7 +38,23 @@ public class BoardService {
         }
     }
 
-    //3. 내가 쓴 글 목록 조회
+    //3. 게시판 별 내가 쓴 글 목록 조회
+    public Page<Board> getBoardsByUserIdAndType(Long userId, BoardType boardType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return boardRepository.findByUserIdAndBoardType(userId, boardType, pageable);
+    }
+
+
+    //4. 게시판 별 게시글 목록 조회
+    public Page<Board> getBoardsByType(BoardType boardType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return boardRepository.findByBoardType(boardType, pageable);
+    }
+
+    //5. 게시판 상세 조회
+    public Board getBoardById(Long boardId) {
+        return boardRepository.findById(boardId).orElse(null);
+    }
 
 
 }

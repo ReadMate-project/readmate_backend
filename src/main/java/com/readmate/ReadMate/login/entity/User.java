@@ -28,14 +28,10 @@ public class User {
     @Column(length = 50)
     private String nickname; //이걸 수정해서 name으로 사용할 수 있도록!, default가 카카오에 설정된 nickname을 name으로 사용
 
-    //카카오 Oauth 로그인만 구rd", nullable = false,현할시 따로 패스워드가 필요없음
-////    @Column(name = "passwo length = 255)
-//    private String password;
-
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Convert(converter = FavoriteGenreConverter.class)
+    @Convert(converter = GenreConverter.class)
     @Column(name = "favorite_genre")
     private List<Genre> favoriteGenre;
 

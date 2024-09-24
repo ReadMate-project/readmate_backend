@@ -188,6 +188,7 @@ public class UserController {
 
         //인증된 사용자 정보 가지고 오기
         User user = userDetails.getUser();
+        System.out.println("userDetail: " + userDetails.getUser());
         return ResponseEntity.ok(BasicResponse.ofSuccess(user));
     }
 

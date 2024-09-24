@@ -1,6 +1,7 @@
 package com.readmate.ReadMate.common.message;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.readmate.ReadMate.board.dto.PageInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,24 +15,29 @@ public class BasicResponse<T>{
     private String message;
     private Integer statusCode;
     private T data;
+    private PageInfo pageInfo;
 
     private static final String SUCCESS = "Success";
 
     public static <T> BasicResponse<T> of(HttpStatus statusCode, String message, T data) {
-        return new BasicResponse<>(message, statusCode.value(), data);
+        return new BasicResponse<>(message, statusCode.value(), data, null);
     }
 
     public static <T> BasicResponse<T> ofSuccess(T data){
-        return new BasicResponse<>(SUCCESS, HttpStatus.OK.value(), data);
+        return new BasicResponse<>(SUCCESS, HttpStatus.OK.value(), data, null);
+    }
+
+    //페이지네이션
+    public static <T> BasicResponse<T> ofSuccess(T data, PageInfo pageInfo) {
+        return new BasicResponse<>(SUCCESS, HttpStatus.OK.value(), data, pageInfo);
     }
 
     public static <T> BasicResponse<T> ofCreateSuccess(T data){
-        return new BasicResponse<>(SUCCESS, HttpStatus.CREATED.value(), data);
+        return new BasicResponse<>(SUCCESS, HttpStatus.CREATED.value(), data, null);
     }
 
     public static <T> BasicResponse<T> ofError(String message, int statusCode) {
-        return new BasicResponse<>(message, statusCode, null);
+        return new BasicResponse<>(message, statusCode, null, null);
     }
-
 
 }
