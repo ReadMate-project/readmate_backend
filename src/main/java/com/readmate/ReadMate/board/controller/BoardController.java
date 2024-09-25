@@ -2,21 +2,28 @@ package com.readmate.ReadMate.board.controller;
 
 import com.readmate.ReadMate.board.dto.BoardRequest;
 import com.readmate.ReadMate.board.dto.BoardUpdateRequest;
+import com.readmate.ReadMate.board.dto.PageInfo;
 import com.readmate.ReadMate.board.entity.Board;
+import com.readmate.ReadMate.board.entity.BoardType;
+import com.readmate.ReadMate.board.repository.BoardRepository;
 import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.common.message.ErrorResponse;
-import com.readmate.ReadMate.login.entity.User;
+import com.readmate.ReadMate.login.security.CustomUserDetails;
 import com.readmate.ReadMate.login.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -26,30 +33,65 @@ import java.util.Optional;
 public class BoardController {
 
     private final BoardService boardService;
-    private final UserService userService;
+
 
     //0.게시판 작성
+    //0-1. 일반 자유게시판일 경우 로그인 된 유저만 작성
+    //0-2. 피드 -> 나만 작성할 수 있음 
+    //0-3. 북클럽 내 자유게시판 -> 북클럽 회원만 작성할 수 있음
     @PostMapping
     @Operation(summary = "게시물 작성", description = "게시물 작성 API")
-    public ResponseEntity<BasicResponse<Board>> createBoard(@RequestBody BoardRequest boardRequest) {
+    public ResponseEntity<BasicResponse<Board>> createBoard(@RequestBody BoardRequest boardRequest,
+                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Optional<User> optionalUser = userService.findUserById(boardRequest.getUserId());
+        if (userDetails == null || userDetails.getUser() == null) { //해당 오류가 발생하면 로그인화면으로 redirect
 
-        if (optionalUser.isEmpty()) {
-            BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("해당 유저가 존재하지 않습니다.", HttpStatus.NOT_FOUND.value());
-            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.NOT_FOUND);
+            BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
+            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
         }
+
+
+        //게시판에 따른 권한 체크
+        BoardType boardType = boardRequest.getBoardType();
+
+        switch (boardType) {
+            case BOARD:
+                boardRequest.setBookId(null);
+                boardRequest.setBookclubId(null);
+                break;
+
+            case FEED:
+                //피드는 무조건적으로 책을 선정해야한다. -> 챌린지 인증을 위해
+                if (boardRequest.getBookId() == null) {
+                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError(
+                            "피드에는 bookId가 필수입니다.", HttpStatus.BAD_REQUEST.value());
+                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.BAD_REQUEST);
+                }
+                break;
+
+//            case CLUB_BOARD: //북클럽회원이 구현되어야 함
+//                boolean isClubMember = bookclubmemberService.isUserInBookClub(boardRequest.getBookclubId(), user.getId());
+//                if (!isClubMember) {
+//                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("해당 북클럽의 회원이 아닙니다.", HttpStatus.FORBIDDEN.value());
+//                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
+//                }
+//                boardRequest.setBookId(null);
+//                break;
+
+            default:
+                BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("잘못된 게시판 타입입니다.", HttpStatus.BAD_REQUEST.value());
+                return new ResponseEntity<>(errorResponseWrapper, HttpStatus.BAD_REQUEST);
+        }
+
 
         Board board = new Board();
         board.setUserId(boardRequest.getUserId());
-        board.setBookId(boardRequest.getBookId());
-        board.setBookclubId(boardRequest.getBookclubId());
-        board.setTotalPages(boardRequest.getTotalPages());
-        board.setCurrentPage(boardRequest.getCurrentPage());
+        board.setBookId(boardRequest.getBookId()); //BOARD와 CLUB_BOARD의 경우 null로 설정됨
+        board.setBookclubId(boardRequest.getBookclubId()); //BOARD같은 경우 null로 설정 (자유게시판이니)
         board.setContent(boardRequest.getContent());
         board.setCreatedAt(LocalDateTime.now());
         board.setTitle(boardRequest.getTitle());
-        board.setLikes(0L);
+        board.setBoardType(boardType);
 
         Board savedBoard = boardService.saveBoard(board);
         BasicResponse<Board> response = BasicResponse.ofCreateSuccess(savedBoard);
@@ -58,30 +100,35 @@ public class BoardController {
     }
 
 
-
     //1.게시판 수정
     @PatchMapping("/{boardId}")
     @Operation(summary = "게시물 수정", description = "게시물 수정 API")
     public ResponseEntity<BasicResponse<Board>> updateBoard(
             @PathVariable("boardId") Long boardId,
-            @RequestBody BoardUpdateRequest updateRequest) {
+            @RequestBody BoardUpdateRequest updateRequest,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        if (userDetails == null || userDetails.getUser() == null) {
+            BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
+            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
+        }
 
         Optional<Board> optionalBoard = boardService.findBoardById(boardId);
 
         if (optionalBoard.isPresent()) {
-            Board board = optionalBoard.get();
+
+            Board board = optionalBoard.get(); //해당 게시물을 가지고옴
+
+            if (!board.getUserId().equals(userDetails.getUser().getUserId())) {
+                BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("해당 게시물에 대한 수정 권한이 없습니다.", HttpStatus.FORBIDDEN.value());
+                return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
+            }
 
             if (updateRequest.getBookId() != null) {
                 board.setBookId(updateRequest.getBookId());
             }
             if (updateRequest.getBookclubId() != null) {
                 board.setBookclubId(updateRequest.getBookclubId());
-            }
-            if (updateRequest.getTotalPages() != null) {
-                board.setTotalPages(updateRequest.getTotalPages());
-            }
-            if (updateRequest.getCurrentPage() != null) {
-                board.setCurrentPage(updateRequest.getCurrentPage());
             }
             if (updateRequest.getContent() != null) {
                 board.setContent(updateRequest.getContent());
@@ -105,13 +152,39 @@ public class BoardController {
     //2.게시판 삭제
     @DeleteMapping("/{boardId}")
     @Operation(summary = "게시물 삭제", description = "게시물 삭제 API")
-    public ResponseEntity<?> deleteBoard(@PathVariable("boardId") Long boardId) {
+    public ResponseEntity<?> deleteBoard(@PathVariable("boardId") Long boardId,
+                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        boolean isDeleted = boardService.deleteBoard(boardId);
+        if (userDetails == null || userDetails.getUser() == null) {
+            BasicResponse<String> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
+            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
+        }
 
-        if (isDeleted) {
-            BasicResponse<String> response = BasicResponse.ofSuccess("게시물이 삭제되었습니다.");
-            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        Optional<Board> optionalBoard = boardService.findBoardById(boardId);
+
+        if (optionalBoard.isPresent()) {
+            Board board = optionalBoard.get();
+
+            //게시물 작성자와 현재 인증된 사용자(=로그인한 유저) 비교 -> 작성자만이 삭제할 수 있는거니까
+            if (!board.getUserId().equals(userDetails.getUser().getUserId())) {
+                BasicResponse<String> errorResponseWrapper = BasicResponse.ofError("해당 게시물에 대한 삭제 권한이 없습니다.", HttpStatus.FORBIDDEN.value());
+                return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
+            }
+
+
+            boolean isDeleted = boardService.deleteBoard(boardId);
+
+
+            if (isDeleted) {
+                BasicResponse<String> response = BasicResponse.ofSuccess("게시물이 삭제되었습니다.");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                ErrorResponse errorResponse = new ErrorResponse(
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(), "INTERNAL_SERVER_ERROR", "게시물 삭제에 실패하였습니다.");
+                return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
         } else {
             ErrorResponse errorResponse = new ErrorResponse(
                     HttpStatus.NOT_FOUND.value(), "NOT_FOUND", "게시물이 존재하지 않습니다.");
@@ -119,5 +192,99 @@ public class BoardController {
         }
     }
 
-    //3. 내가 쓴 글 목록 조회
+    //3. 게시판 별 내가 쓴 글 목록 조회
+    @GetMapping("/mypost")
+    @Operation(summary = "사용자 게시글 목록 조회", description = "특정 사용자와 게시글 타입에 따른 게시글 목록 조회 API")
+    public ResponseEntity<BasicResponse<List<Board>>> getBoardsByUserIdAndType(
+            @RequestParam("boardType") BoardType boardType,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+
+        if (userDetails == null || userDetails.getUser() == null) {
+            BasicResponse<List<Board>> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
+            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
+        }
+
+        // userId와 BoardType에 따른 게시글 목록 조회
+        Long userId = userDetails.getUser().getUserId();
+        Page<Board> boardPage = boardService.getBoardsByUserIdAndType(userId, boardType, page, size);
+
+        PageInfo pageInfo = new PageInfo(
+                boardPage.getNumber(),
+                boardPage.getSize(),
+                (int) boardPage.getTotalElements(),
+                boardPage.getTotalPages()
+        );
+
+        BasicResponse<List<Board>> response = BasicResponse.ofSuccess(boardPage.getContent(), pageInfo);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    //4. 게시판 별 게시글 목록 조회
+    //4-1. 자유 게시판일 경우에는 로그인 유무와 상관없이 목록 조회 가능
+    //4-2. 북클럽내 자유게시판일 경우 로그인 및 해당 북클럽 회원이어야지만 해당 북클럽 자유게시판 목록 조회 가능
+    @GetMapping("/")
+    @Operation(summary = "게시글 목록 조회", description = "게시글 타입에 따른 게시글 목록 조회 API")
+    public ResponseEntity<BasicResponse<List<Board>>> getBoardsByType(
+            @RequestParam("boardType") BoardType boardType,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+
+
+        Page<Board> boardPage;
+
+        if (boardType == BoardType.BOARD || boardType == BoardType.FEED) {
+
+            // 로그인 유무와 상관없이 목록 조회 가능
+            boardPage = boardService.getBoardsByType(boardType, page, size);
+
+        } else if (boardType == BoardType.CLUB_BOARD) {
+            if (userDetails == null || userDetails.getUser() == null) {
+                // CLUB_BOARD는 로그인한 유저 + 해당 북클럽 회원만 조회 가능
+                return new ResponseEntity<>(BasicResponse.ofError("로그인이 필요합니다.", HttpStatus.UNAUTHORIZED.value()), HttpStatus.UNAUTHORIZED);
+            }
+
+            // 로그인한 유저의 ID를 가져옴
+            Long userId = userDetails.getUser().getUserId();
+
+            // 로그인한 유저가 소속된 북클럽의 게시물 조회
+            boardPage = boardService.getBoardsByUserIdAndType(userId, boardType, page, size);
+        } else {
+            return new ResponseEntity<>(BasicResponse.ofError("잘못된 게시판 타입입니다.", HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST);
+        }
+        PageInfo pageInfo = new PageInfo(
+                boardPage.getNumber(),
+                boardPage.getSize(),
+                (int) boardPage.getTotalElements(),
+                boardPage.getTotalPages()
+        );
+
+        BasicResponse<List<Board>> response = BasicResponse.ofSuccess(boardPage.getContent(), pageInfo);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    //5. 게시판 상세 조회
+    @GetMapping("/{boardId}")
+    @Operation(summary = "게시글 상세 조회", description = "게시글 상세 조회 API")
+    public ResponseEntity<?> getBoardDetails(@PathVariable("boardId") Long boardId,
+                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Board board = boardService.getBoardById(boardId);
+
+        if (board == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 게시물은 존재하지 않습니다.");
+        }
+
+//        // 게시판 타입이 CLUB_BOARD인 경우
+//        if (board.getBoardType() == BoardType.CLUB_BOARD) {
+//            boolean isMember = bookClubService.isMember(board.getBookClubId(), userDetails.getUser().getId());
+//            if (!isMember) {
+//                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이 게시물은 북클럽 회원만 볼 수 있습니다.");
+//            }
+//        }
+
+        return ResponseEntity.ok(board);
+    }
 }
