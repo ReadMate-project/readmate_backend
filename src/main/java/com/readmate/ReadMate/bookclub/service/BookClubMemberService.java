@@ -29,7 +29,7 @@ public class BookClubMemberService {
 
         // BookClubId가 존재하지 않을 경우 에러 발생
         if (bookClubRepository.existsById(bookClubId)) {
-            // 이미 가입한 멤버일 경우 - 재가입 또는 에러코
+            // 이미 가입한 멤버일 경우 - 재가입 또는 에러코드
             if (bookClubMemberRepository.existsByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId)) {
                 BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId);
                 if (bookClubMember.getDelYn().equals("N")){

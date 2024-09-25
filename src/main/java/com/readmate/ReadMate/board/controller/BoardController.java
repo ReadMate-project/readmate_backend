@@ -7,6 +7,10 @@ import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.repository.BoardRepository;
 import com.readmate.ReadMate.board.service.BoardService;
+import com.readmate.ReadMate.bookclub.dto.res.BookClubMemberResponse;
+import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.common.exception.CustomException;
+import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.common.message.ErrorResponse;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
@@ -33,12 +37,14 @@ import java.util.Optional;
 public class BoardController {
 
     private final BoardService boardService;
+    private final BookClubMemberService bookClubMemberService;
 
 
     //0.게시판 작성
     //0-1. 일반 자유게시판일 경우 로그인 된 유저만 작성
     //0-2. 피드 -> 나만 작성할 수 있음 
     //0-3. 북클럽 내 자유게시판 -> 북클럽 회원만 작성할 수 있음
+
     @PostMapping
     @Operation(summary = "게시물 작성", description = "게시물 작성 API")
     public ResponseEntity<BasicResponse<Board>> createBoard(@RequestBody BoardRequest boardRequest,
@@ -69,14 +75,22 @@ public class BoardController {
                 }
                 break;
 
-//            case CLUB_BOARD: //북클럽회원이 구현되어야 함
-//                boolean isClubMember = bookclubmemberService.isUserInBookClub(boardRequest.getBookclubId(), user.getId());
-//                if (!isClubMember) {
-//                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("해당 북클럽의 회원이 아닙니다.", HttpStatus.FORBIDDEN.value());
-//                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
-//                }
-//                boardRequest.setBookId(null);
-//                break;
+            case CLUB_BOARD:
+                if (userDetails == null || userDetails.getUser() == null) {
+                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("인증된 유저가 아닙니다.", HttpStatus.UNAUTHORIZED.value());
+                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
+                }
+
+                try {
+                    // 북클럽 멤버 여부 확인만 수행 (리턴값 사용하지 않음)
+                    bookClubMemberService.findMember(boardRequest.getBookclubId(), userDetails);
+
+                    boardRequest.setBookId(null);
+                } catch (CustomException e) {
+                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("해당 북클럽의 회원이 아닙니다.", HttpStatus.FORBIDDEN.value());
+                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
+                }
+                break;
 
             default:
                 BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("잘못된 게시판 타입입니다.", HttpStatus.BAD_REQUEST.value());
@@ -136,6 +150,7 @@ public class BoardController {
             if (updateRequest.getTitle() != null) {
                 board.setTitle(updateRequest.getTitle());
             }
+            board.setCreatedAt(LocalDateTime.now());
 
             Board updatedBoard = boardService.saveBoard(board);
             BasicResponse<Board> response = BasicResponse.ofSuccess(updatedBoard);
@@ -230,7 +245,8 @@ public class BoardController {
             @RequestParam("boardType") BoardType boardType,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("page") int page,
-            @RequestParam("size") int size) {
+            @RequestParam("size") int size,
+            BoardRequest boardRequest) {
 
 
         Page<Board> boardPage;
@@ -240,20 +256,33 @@ public class BoardController {
             // 로그인 유무와 상관없이 목록 조회 가능
             boardPage = boardService.getBoardsByType(boardType, page, size);
 
-        } else if (boardType == BoardType.CLUB_BOARD) {
+        }
+        else if (boardType == BoardType.CLUB_BOARD) {
             if (userDetails == null || userDetails.getUser() == null) {
                 // CLUB_BOARD는 로그인한 유저 + 해당 북클럽 회원만 조회 가능
                 return new ResponseEntity<>(BasicResponse.ofError("로그인이 필요합니다.", HttpStatus.UNAUTHORIZED.value()), HttpStatus.UNAUTHORIZED);
             }
-
-            // 로그인한 유저의 ID를 가져옴
+            
             Long userId = userDetails.getUser().getUserId();
+
+            //boardRequest에서 북클럽 ID 가져오기
+            Long bookclubId = boardRequest.getBookclubId();
+
+            // 로그인한 유저가 해당 북클럽의 회원인지 확인
+            List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMember(bookclubId, userDetails);
+
+            // memberResponses를 사용해 북클럽 회원인지 확인
+            if (memberResponses.isEmpty()) {
+                return new ResponseEntity<>(BasicResponse.ofError("해당 북클럽의 회원이 아닙니다.", HttpStatus.FORBIDDEN.value()), HttpStatus.FORBIDDEN);
+            }
 
             // 로그인한 유저가 소속된 북클럽의 게시물 조회
             boardPage = boardService.getBoardsByUserIdAndType(userId, boardType, page, size);
-        } else {
+        }
+        else {
             return new ResponseEntity<>(BasicResponse.ofError("잘못된 게시판 타입입니다.", HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST);
         }
+
         PageInfo pageInfo = new PageInfo(
                 boardPage.getNumber(),
                 boardPage.getSize(),
@@ -271,20 +300,34 @@ public class BoardController {
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세 조회 API")
     public ResponseEntity<?> getBoardDetails(@PathVariable("boardId") Long boardId,
                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // 게시글 조회
         Board board = boardService.getBoardById(boardId);
 
+        // 게시글이 존재하지 않는 경우
         if (board == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 게시물은 존재하지 않습니다.");
         }
 
-//        // 게시판 타입이 CLUB_BOARD인 경우
-//        if (board.getBoardType() == BoardType.CLUB_BOARD) {
-//            boolean isMember = bookClubService.isMember(board.getBookClubId(), userDetails.getUser().getId());
-//            if (!isMember) {
-//                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이 게시물은 북클럽 회원만 볼 수 있습니다.");
-//            }
-//        }
+        // 게시판 타입이 CLUB_BOARD인 경우
+        if (board.getBoardType() == BoardType.CLUB_BOARD) {
+            // 인증된 유저인지 확인
+            if (userDetails == null || userDetails.getUser() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+            }
+
+            // 해당 북클럽의 회원인지 확인
+            try { // memberResponses가 비어있지 않은 경우는 이미 회원인 경우이므로 아무 행동도 하지 않음
+                 bookClubMemberService.findMember(board.getBookclubId(), userDetails);
+            } catch (CustomException e) {
+                if (e.getErrorCode() == ErrorCode.NOT_MEMBER) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이 게시물은 북클럽 회원만 볼 수 있습니다.");
+                }
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("오류가 발생했습니다.");
+            }
+        }
 
         return ResponseEntity.ok(board);
     }
+
 }
