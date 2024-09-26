@@ -97,7 +97,7 @@ public class BookClub {
 
     public void updateBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());
-        this.setLeaderId(clubRequest.getLeaderId());
+//        this.setLeaderId(clubRequest.getLeaderId());
         this.setIsPublic(clubRequest.isPublic());
         this.setBookClubImageID(clubRequest.getBookClubImageId());
         this.setDescription(clubRequest.getDescription());
@@ -105,7 +105,6 @@ public class BookClub {
         this.setStartDate(clubRequest.getStartDate() != null ? clubRequest.getStartDate() : LocalDate.now());
         this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
         this.setBookClubGenre(clubRequest.getBookClubGenre());
-
         this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
         this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
 
