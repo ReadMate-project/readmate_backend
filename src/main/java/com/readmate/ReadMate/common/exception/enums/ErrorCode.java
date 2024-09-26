@@ -38,9 +38,18 @@ public enum ErrorCode {
     ALREADY_JOINED(409, "CLUB004", "이미 가입한 클럽입니다."),
     NOT_MEMBER(409, "CLUB005", "가입하지 않은 클럽입니다."),
 
+    //BOOK
+
+    INVALID_BOOK(404, "BOOK001", "존재하지 않는 책 입니다."),
+    API_CALL_FAILED(500,"BOOK002","Aladin API 에서 받아오는 것을 실패했습니다"),
+
+    INVALID_GENRE(404, "BOOK003", "존재하지 않는 장르 입니다."),
+
+    BOOK_NOT_FOUND(404, "BOOK003", "존재하지 않는 장르 입니다."),
+
 
     // COMMENT
-    INVALID_COMMENT(404, "COMMENT001", "존재하지 않는 댓글입니다.");
+    INVALID_COMMENT(404, "BOOK004", "책을 찾을 수 없습니다.");
 
 
     private int status;
