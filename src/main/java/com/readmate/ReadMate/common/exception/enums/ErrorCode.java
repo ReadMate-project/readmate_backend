@@ -37,6 +37,8 @@ public enum ErrorCode {
 
     ALREADY_JOINED(409, "CLUB004", "이미 가입한 클럽입니다."),
     NOT_MEMBER(409, "CLUB005", "가입하지 않은 클럽입니다."),
+    INVALID_LEAVE(408, "CLUB006", "리더는 탈퇴할 수 없습니다.리더를 수정해주세요"),
+    INVALID_MEMBER(409, "CLUB007", "가입하지 않은 멤버 입니다"),
 
     //BOOK
 

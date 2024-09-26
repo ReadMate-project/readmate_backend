@@ -29,7 +29,7 @@ public class BookClubMemberService {
 
         // BookClubId가 존재하지 않을 경우 에러 발생
         if (bookClubRepository.existsById(bookClubId)) {
-            // 이미 가입한 멤버일 경우 - 재가입 또는 에러코
+            // 이미 가입한 멤버일 경우 - 재가입 또는 에러코드
             if (bookClubMemberRepository.existsByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId)) {
                 BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId);
                 if (bookClubMember.getDelYn().equals("N")){
@@ -63,13 +63,19 @@ public class BookClubMemberService {
         if (!bookClubRepository.existsById(bookClubId)) {
             throw new CustomException(ErrorCode.INVALID_CLUB);
         }
-        // 가입 신청을 위한 새로운 멤버 생성
+
+        //탈퇴 로직
         BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId);
         if (bookClubMember != null) {
-            bookClubMember.setDelYn("Y");
-            bookClubMember.setIsApprove(false);
-            bookClubMemberRepository.save(bookClubMember);
-            return "탈퇴가 완료되었습니다.";
+            //탈퇴하려는 USER가 현재 리더일 경우
+            if(bookClubMember.getClubMemberRole().equals(BookClubMemberRole.LEADER)){
+                throw new CustomException(ErrorCode.INVALID_LEAVE);
+            }else {
+                bookClubMember.setDelYn("Y");
+                bookClubMember.setIsApprove(false);
+                bookClubMemberRepository.save(bookClubMember);
+                return "탈퇴가 완료되었습니다.";
+            }
         } else {
             throw new CustomException(ErrorCode.NOT_MEMBER);
         }

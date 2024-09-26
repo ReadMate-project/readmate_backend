@@ -7,7 +7,10 @@
     import com.readmate.ReadMate.bookclub.dto.res.BookClubResponse;
     import com.readmate.ReadMate.bookclub.entity.BookClub;
     import com.readmate.ReadMate.bookclub.entity.BookClubBook;
+    import com.readmate.ReadMate.bookclub.entity.BookClubMember;
+    import com.readmate.ReadMate.bookclub.entity.BookClubMemberRole;
     import com.readmate.ReadMate.bookclub.repository.BookClubBookRepository;
+    import com.readmate.ReadMate.bookclub.repository.BookClubMemberRepository;
     import com.readmate.ReadMate.bookclub.repository.BookClubRepository;
     import com.readmate.ReadMate.common.exception.CustomException;
     import com.readmate.ReadMate.common.exception.enums.ErrorCode;
@@ -29,6 +32,7 @@
 
         private final BookClubRepository bookClubRepository;
         private final BookClubBookRepository bookClubBookRepository;
+        private final BookClubMemberRepository bookClubMemberRepository;
 
         public Long createClub(CustomUserDetails userDetails, BookClubRequest clubRequest) {
 
@@ -44,7 +48,7 @@
             bookClub.setCurrentBookId(clubRequest.getCurrentBookId());
 
             BookClub savedBookClub = bookClubRepository.save(bookClub);
-
+            joinLeader(savedBookClub.getBookClubId(),leaderId);
             List<BookClubBook> bookClubBooks = clubRequest.getBookList().stream()
                     .map(isbn -> BookClubBook.builder()
                             .isbn(isbn)
@@ -70,9 +74,26 @@
                 // BookClub 수정
                 BookClub savedBookClub = bookClubRepository.findById(clubId)
                         .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+                Long userId = userDetails.getUser().getUserId();
+                if(userId.equals(savedBookClub.getLeaderId())) {
 
-                if(userDetails.getUser().getUserId().equals(savedBookClub.getLeaderId())) {
+                    BookClubMember newLeader =  bookClubMemberRepository.findByUserIdAndBookClubId(clubRequest.getLeaderId(), savedBookClub.getBookClubId());
+                    BookClubMember oldLeader =  bookClubMemberRepository.findByUserIdAndBookClubId(clubRequest.getLeaderId(), savedBookClub.getBookClubId());
 
+                    // 선택된 리더가 북클럽의 멤버이며 삭제되지 않은 상태일 경우
+                    if (newLeader != null && newLeader.getIsApprove() && newLeader.getDelYn().equals("N")) {
+
+                        savedBookClub.setLeaderId(clubRequest.getLeaderId());
+
+                        newLeader.setClubMemberRole(BookClubMemberRole.LEADER);
+                        oldLeader.setClubMemberRole(BookClubMemberRole.MEMBER);
+
+                        bookClubMemberRepository.save(newLeader);
+                        bookClubMemberRepository.save(oldLeader);
+
+                    } else {
+                        throw new CustomException(ErrorCode.NOT_MEMBER);
+                    }
                     savedBookClub.updateBookClub(clubRequest);
 
                     List<BookClubBook> savedBooks = bookClubBookRepository.findAllByBookClubId(clubId);
@@ -184,6 +205,24 @@
             return totalPages;
         }
 
+
+
+        /**
+         * 리더 북클럽 멤버 Repo 추가하는 로직
+         * @param bookClubId
+         * @return String
+         */
+        public void joinLeader(Long bookClubId,  Long leaderId) {
+
+                    BookClubMember bookClubMember = BookClubMember.builder()
+                            .userId(leaderId)
+                            .clubMemberRole(BookClubMemberRole.LEADER)
+                            .bookClubId(bookClubId)
+                            .joinMessage("북클럽 리더 입니다")
+                            .isApprove(true)
+                            .build();
+                    bookClubMemberRepository.save(bookClubMember);
+            }
 
     }
 

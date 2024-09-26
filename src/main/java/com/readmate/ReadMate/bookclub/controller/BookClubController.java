@@ -62,5 +62,4 @@ public class BookClubController {
         return ResponseEntity.ok(isTaken);
     }
 
-
 }

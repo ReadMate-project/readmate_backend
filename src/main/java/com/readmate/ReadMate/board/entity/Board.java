@@ -44,4 +44,14 @@ public class Board {
     @Column(name = "title")
     private String title;
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
 }

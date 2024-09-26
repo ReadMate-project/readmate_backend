@@ -105,6 +105,7 @@ public class BookClub {
         this.setBookClubName(clubRequest.getBookClubName());
         this.setLeaderId(clubRequest.getLeaderId());
 //        this.setIsPublic(clubRequest.isPublic());
+//        this.setLeaderId(clubRequest.getLeaderId());
         this.setBookClubImageID(clubRequest.getBookClubImageId());
         this.setDescription(clubRequest.getDescription());
         this.setNotify(clubRequest.getNotify());
