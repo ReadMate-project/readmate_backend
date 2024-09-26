@@ -14,6 +14,7 @@ public class AladinBook {
     private Long itemPage;
     private String cover;
     private String categoryName;
+    private SubInfo subInfo;
 
 
 }

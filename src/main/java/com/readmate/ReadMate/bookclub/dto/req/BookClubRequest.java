@@ -25,13 +25,17 @@ public class BookClubRequest {
     private Long bookClubImageId;
     private String notify;
 
-    private boolean isPublic;
+//    private boolean isPublic;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate startDate;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate endDate;
 
     private List<Long> bookList;
+
+    private Long totalPages;
+
+    private Long currentBookId;
 
 
     // 모집 기간

@@ -26,12 +26,15 @@ public class BookClubBook {
     @Builder.Default
     private boolean isActive = true;
 
+    private Long pages;
+
     @Builder
-    public BookClubBook(Long id, Long isbn, BookClub bookClub, boolean isActive) {
+    public BookClubBook(Long id, Long isbn, BookClub bookClub, boolean isActive,Long pages) {
         this.id = id;
         this.isbn = isbn;
         this.bookClub = bookClub;
         this.isActive = isActive;
+        this.pages = pages;
     }
     public void update() {
         this.isActive = false;

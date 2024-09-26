@@ -41,6 +41,7 @@
 
             Long leaderId = userDetails.getUser().getUserId();
             bookClub.setLeaderId(leaderId);
+            bookClub.setCurrentBookId(clubRequest.getCurrentBookId());
 
             BookClub savedBookClub = bookClubRepository.save(bookClub);
 
@@ -52,6 +53,9 @@
                     .collect(Collectors.toList());
 
             bookClubBookRepository.saveAll(bookClubBooks);
+
+            Long totalPages = calculateTotalPages(savedBookClub.getBookClubId(), bookClubBooks);
+            bookClub.setTotalPages(totalPages);
 
             return savedBookClub.getBookClubId();
         }
@@ -84,7 +88,7 @@
                             newIsbns.remove(book.getIsbn());
                         }
                     }
-                    // 나머지 새로운 책들을 저장
+
                     List<BookClubBook> newBooks = newIsbns.stream()
                             .map(isbn -> BookClubBook.builder()
                                     .isbn(isbn)
@@ -128,7 +132,7 @@
         public List<BookClubListResponse> getClubList() {
             List<BookClub> bookClubs = bookClubRepository.findAll();
 
-            List<BookClubListResponse> responses = bookClubs.stream()
+            return  bookClubs.stream()
                     .map(bookClub -> BookClubListResponse.builder()
                             .bookClubID(bookClub.getBookClubId())
                             .bookClubName(bookClub.getBookClubName())
@@ -139,9 +143,10 @@
                             .recruitmentStartDate(bookClub.getRecruitmentStartDate())
                             .recruitmentEndDate(bookClub.getRecruitmentEndDate())
                             .bookClubGenres(bookClub.getBookClubGenre())
+                            .currentBookId(bookClub.getCurrentBookId())
                             .build())
                     .toList();
-            return responses;
+
         }
 
 
@@ -155,6 +160,7 @@
                             .bookClubBookId(book.getId())
                             .isbn(book.getIsbn())
                             .isActive(book.isActive())
+                            .totalPage(book.getPages())
                             .build())
                     .collect(Collectors.toList());
 
@@ -168,6 +174,17 @@
         public boolean isBookClubNameTaken(String clubName) {
             return bookClubRepository.existsByBookClubName(clubName);
         }
+
+        public Long calculateTotalPages( Long bookClubId,List<BookClubBook> bookClubBooks){
+            List<BookClubBook> books = bookClubBookRepository.findAllByBookClubIdAndIsActive(bookClubId, true);
+
+            Long totalPages = books.stream()
+                    .mapToLong(BookClubBook::getPages) // Get the total pages for each book
+                    .sum();
+            return totalPages;
+        }
+
+
     }
 
 

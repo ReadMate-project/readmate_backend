@@ -32,6 +32,8 @@ public class BookClubListResponse {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate endDate;
 
+    private Long currentBookId;
+
     // 모집 기간
     @NotNull
     @Column(name = "recruitment_start_date")

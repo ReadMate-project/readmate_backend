@@ -13,4 +13,5 @@ public class BookClubBookResponse {
     private Long bookClubBookId;
     private Long isbn;
     private boolean isActive;
+    private Long totalPage;
 }

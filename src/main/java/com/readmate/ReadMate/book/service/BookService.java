@@ -4,6 +4,7 @@ import com.readmate.ReadMate.book.dto.req.BookRequest;
 import com.readmate.ReadMate.book.dto.res.AladinBook;
 import com.readmate.ReadMate.book.dto.res.AladinBookResponse;
 import com.readmate.ReadMate.book.dto.res.BookResponse;
+import com.readmate.ReadMate.book.dto.res.SubInfo;
 import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.book.entity.BookCategory;
 import com.readmate.ReadMate.book.repository.BookRepository;
@@ -97,6 +98,7 @@ public class BookService {
 
         if (response.getStatusCode().is2xxSuccessful()) {
             AladinBookResponse bookResponse = response.getBody();
+            System.out.println("bookResponse.getItem() = " + bookResponse.getItem());
 
             // Check if the book response is valid
             if (bookResponse == null || bookResponse.getItem() == null || bookResponse.getItem().isEmpty()) {
@@ -106,6 +108,8 @@ public class BookService {
 
             // Extract book information from the first item
             AladinBook bookInfo = bookResponse.getItem().get(0);
+            SubInfo subInfo = bookInfo.getSubInfo();
+            Long totalPages = (subInfo != null) ? subInfo.getItemPage() : null;
 
             // 데이터 가져오기
             String title = bookInfo.getTitle();
@@ -114,7 +118,6 @@ public class BookService {
             String isbn = bookInfo.getIsbn();
             String isbn13Str = bookInfo.getIsbn13();
             String publisher = bookInfo.getPublisher();
-            Long totalPages = bookInfo.getItemPage();
             String coverUrl = bookInfo.getCover();
             String categoryName = bookInfo.getCategoryName();
 

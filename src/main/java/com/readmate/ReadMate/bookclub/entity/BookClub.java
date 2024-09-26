@@ -3,7 +3,6 @@ package com.readmate.ReadMate.bookclub.entity;
 import com.readmate.ReadMate.bookclub.dto.req.BookClubRequest;
 import com.readmate.ReadMate.common.genre.Genre;
 import com.readmate.ReadMate.common.genre.GenreConverter;
-import com.readmate.ReadMate.login.security.CustomUserDetails;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -11,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.List;
+
 @Entity
 @Builder
 @Getter
@@ -44,10 +44,10 @@ public class BookClub {
     @Column
     private String notify;
 
-    @NotNull
-    @Column(name = "is_public", nullable = false)
-    @Builder.Default
-    private Boolean isPublic = true;
+//    @NotNull
+//    @Column(name = "is_public", nullable = false)
+//    @Builder.Default
+//    private Boolean isPublic = true;
 
     @NotNull
     @Column(name = "start_date")
@@ -80,32 +80,38 @@ public class BookClub {
     @Column(name = "book_club_key")
     private String bookClubKey;
 
+    @Transient
+    private Long totalPages;
+
+    @Column(name = "current_book_id")
+    private Long currentBookId;
+
     public void createBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());
-        this.setIsPublic(clubRequest.isPublic());
+//        this.setIsPublic(clubRequest.isPublic());
         this.setBookClubImageID(clubRequest.getBookClubImageId());
         this.setDescription(clubRequest.getDescription());
         this.setNotify(clubRequest.getNotify());
         this.setStartDate(clubRequest.getStartDate() != null ? clubRequest.getStartDate() : LocalDate.now());
         this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
         this.setBookClubGenre(clubRequest.getBookClubGenre());
-
         this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
         this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
+        this.setCurrentBookId(clubRequest.getCurrentBookId());
 
     }
 
     public void updateBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());
         this.setLeaderId(clubRequest.getLeaderId());
-        this.setIsPublic(clubRequest.isPublic());
+//        this.setIsPublic(clubRequest.isPublic());
         this.setBookClubImageID(clubRequest.getBookClubImageId());
         this.setDescription(clubRequest.getDescription());
         this.setNotify(clubRequest.getNotify());
         this.setStartDate(clubRequest.getStartDate() != null ? clubRequest.getStartDate() : LocalDate.now());
         this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
         this.setBookClubGenre(clubRequest.getBookClubGenre());
-
+        this.setCurrentBookId(clubRequest.getCurrentBookId());
         this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
         this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
 

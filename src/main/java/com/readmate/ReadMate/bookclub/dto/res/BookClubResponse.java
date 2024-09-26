@@ -28,7 +28,9 @@ public class BookClubResponse {
     private Long bookClubImageId;
     private String notify;
 
-    private boolean isPublic;
+//    private boolean isPublic;
+
+    private Long totalPage;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
@@ -66,7 +68,7 @@ public class BookClubResponse {
         this.startDate = bookClub.getStartDate();
         this.endDate = bookClub.getEndDate();
         this.notify = bookClub.getNotify();
-        this.isPublic = bookClub.getIsPublic();
+//        this.isPublic = bookClub.getIsPublic();
         this.recruitmentEndDate = bookClub.getRecruitmentEndDate();
         this.recruitmentStartDate = bookClub.getRecruitmentStartDate();
         this.bookClubKey = bookClub.getBookClubKey();
