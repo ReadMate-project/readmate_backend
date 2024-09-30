@@ -246,41 +246,40 @@ public class BoardController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("page") int page,
             @RequestParam("size") int size,
-            BoardRequest boardRequest) {
-
+            @RequestParam("bookclubId") Long bookclubId) {
 
         Page<Board> boardPage;
 
         if (boardType == BoardType.BOARD || boardType == BoardType.FEED) {
-
             // 로그인 유무와 상관없이 목록 조회 가능
             boardPage = boardService.getBoardsByType(boardType, page, size);
-
         }
         else if (boardType == BoardType.CLUB_BOARD) {
+            // CLUB_BOARD는 로그인한 유저 + 해당 북클럽 회원만 조회 가능
             if (userDetails == null || userDetails.getUser() == null) {
-                // CLUB_BOARD는 로그인한 유저 + 해당 북클럽 회원만 조회 가능
-                return new ResponseEntity<>(BasicResponse.ofError("로그인이 필요합니다.", HttpStatus.UNAUTHORIZED.value()), HttpStatus.UNAUTHORIZED);
+                throw new CustomException(ErrorCode.UNAUTHORIZED); // UNAUTHORIZED 오류 발생
             }
-            
-            Long userId = userDetails.getUser().getUserId();
 
-            //boardRequest에서 북클럽 ID 가져오기
-            Long bookclubId = boardRequest.getBookclubId();
+            Long userId = userDetails.getUser().getUserId();
 
             // 로그인한 유저가 해당 북클럽의 회원인지 확인
             List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMember(bookclubId, userDetails);
 
             // memberResponses를 사용해 북클럽 회원인지 확인
             if (memberResponses.isEmpty()) {
-                return new ResponseEntity<>(BasicResponse.ofError("해당 북클럽의 회원이 아닙니다.", HttpStatus.FORBIDDEN.value()), HttpStatus.FORBIDDEN);
+                throw new CustomException(ErrorCode.UNAUTHORIZED); // UNAUTHORIZED 오류 발생
             }
 
             // 로그인한 유저가 소속된 북클럽의 게시물 조회
             boardPage = boardService.getBoardsByUserIdAndType(userId, boardType, page, size);
+
+            // 게시물이 존재하지 않을 경우
+            if (boardPage.isEmpty()) {
+                throw new CustomException(ErrorCode.INVALID_BOARD); // 존재하지 않는 게시물 오류 발생
+            }
         }
         else {
-            return new ResponseEntity<>(BasicResponse.ofError("잘못된 게시판 타입입니다.", HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST);
+            throw new CustomException(ErrorCode.INVALID_BOARD); // 잘못된 게시판 타입 오류 발생
         }
 
         PageInfo pageInfo = new PageInfo(
