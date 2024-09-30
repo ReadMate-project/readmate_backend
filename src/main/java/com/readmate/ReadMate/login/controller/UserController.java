@@ -22,9 +22,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.HttpHeaders;
 
 import java.util.Optional;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -36,6 +37,7 @@ public class UserController {
     private final TokenService tokenService;
     private final UserRepository userRepository;
 
+
     @Value("${kakao.admin-key}")
     private String adminKey;
 
@@ -43,7 +45,7 @@ public class UserController {
     //1. 카카오톡 회원가입 및 로그인
     //1.1 DB에 해당 유저의 정보가 없을 경우 -> 회원가입절차로 DB에 유저 정보 저장
     //1.2 DB에 해당 유저의 정보가 있을 경우 -> 로그인
-
+//    @GetMapping("/oauth2/kakao/code")
     @GetMapping("/login/kakao")  // 프론트에서 인가코드 받아오는 url -> redirect로 프론트와 동일하게 설정해야한다.
     @Operation(summary = "회원가입 및 로그인", description = "유저의 정보가 있을 시 회원가입, 없을 시 로그인을 실시하는 API")
     public ResponseEntity<BasicResponse<String>> kakaoLogin(
@@ -88,7 +90,9 @@ public class UserController {
                     refreshToken = tokenService.createRefreshToken(user);
                     tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
                 }
+                
 
+                //해당 토큰은 accessToken을 JWT로 변환해서 보내는 것이기에 보안에서 문제 없음
                 String newAccessToken  = tokenService.renewAccessToken(refreshToken);
 
 
@@ -97,10 +101,15 @@ public class UserController {
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                String tokenInfo = String.format("Access Token: %s, Refresh Token: %s", newAccessToken, refreshToken);
-                BasicResponse<String> response = BasicResponse.ofSuccess(tokenInfo, "로그인 성공");
 
-                return ResponseEntity.ok(response);
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("Authorization", "Bearer " + newAccessToken);
+                System.out.println("헤더에 넣을 access token= " + newAccessToken);
+
+
+                BasicResponse<String> response = BasicResponse.ofSuccess("로그인 성공");
+                return ResponseEntity.ok().headers(headers).body(response);
+
             }
 
         } catch (Exception e) {
@@ -108,6 +117,8 @@ public class UserController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
 
 
     // 2. 로그아웃
@@ -191,6 +202,4 @@ public class UserController {
         System.out.println("userDetail: " + userDetails.getUser());
         return ResponseEntity.ok(BasicResponse.ofSuccess(user));
     }
-
-
 }
