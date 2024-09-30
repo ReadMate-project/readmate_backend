@@ -1,8 +1,12 @@
 package com.readmate.ReadMate.comment.service;
 
+import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
 import com.readmate.ReadMate.comment.dto.CommentRequest;
 import com.readmate.ReadMate.comment.entity.Comment;
 import com.readmate.ReadMate.comment.repository.CommentRepository;
+import com.readmate.ReadMate.common.exception.CustomException;
+import com.readmate.ReadMate.common.exception.enums.ErrorCode;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +19,7 @@ import java.util.Optional;
 public class CommentService {
 
     private final CommentRepository commentRepository;
+    private final BookClubMemberService bookClubMemberService;
 
 
     //1. 댓글 작성
@@ -46,6 +51,22 @@ public class CommentService {
     public List<Comment> getCommentsByBoardId(Long boardId) {
         return commentRepository.findByBoardId(boardId);
     }
+
+
+    //3. 댓글 삭제
+    public void deleteComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!comment.getUserId().equals(userId)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        commentRepository.delete(comment);
+    }
+
+
+
 
 
 }

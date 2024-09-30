@@ -42,7 +42,10 @@ public enum ErrorCode {
 
 
     // COMMENT
-    INVALID_COMMENT(404, "COMMENT001", "존재하지 않는 댓글입니다.");
+    INVALID_COMMENT(404, "COMMENT001", "존재하지 않는 댓글입니다."),
+    UNAUTHORIZED(403,"COMMENT002", "권한이 없습니다."),
+    COMMENT_NOT_FOUND(404, "COMMENT003", "댓글을 찾을 수 없습니다.");
+
 
 
     private int status;

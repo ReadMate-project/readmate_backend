@@ -56,5 +56,8 @@ public class BoardService {
         return boardRepository.findById(boardId).orElse(null);
     }
 
+    public Optional<Board> findById(Long boardId) {
+        return boardRepository.findById(boardId); // 게시글 조회
+    }
 
 }
