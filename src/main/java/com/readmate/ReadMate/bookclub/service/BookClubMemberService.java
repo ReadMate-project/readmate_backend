@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,11 +28,14 @@ public class BookClubMemberService {
 
     public String joinClub(Long bookClubId, BookClubJoinRequest bookClubJoinRequest, CustomUserDetails userDetails) {
 
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+
         // BookClubId가 존재하지 않을 경우 에러 발생
-        if (bookClubRepository.existsById(bookClubId)) {
+
             // 이미 가입한 멤버일 경우 - 재가입 또는 에러코드
-            if (bookClubMemberRepository.existsByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId)) {
-                BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId);
+            if (bookClubMemberRepository.existsByUserIdAndBookClub(userDetails.getUser().getUserId(), bookClub)) {
+                BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClub(userDetails.getUser().getUserId(), bookClub);
                 if (bookClubMember.getDelYn().equals("N")){
                     throw new CustomException(ErrorCode.ALREADY_JOINED);
                 }else{
@@ -44,7 +48,7 @@ public class BookClubMemberService {
                 BookClubMember bookClubMember = BookClubMember.builder()
                         .userId(userDetails.getUser().getUserId())
                         .clubMemberRole(BookClubMemberRole.MEMBER)
-                        .bookClubId(bookClubId)
+                        .bookClub(bookClub)
                         .joinMessage(bookClubJoinRequest.getJoinMessage())
                         .isApprove(false)
                         .build();
@@ -52,20 +56,18 @@ public class BookClubMemberService {
             }
 
             return "가입 신청이 완료되었습니다. 승인을 기다려주세요.";
-        } else {
-            throw new CustomException(ErrorCode.INVALID_CLUB);
         }
-    }
+
 
 
     public String leaveClub(Long bookClubId, CustomUserDetails userDetails) {
-        // BookClubId가 존재하지 않을 경우 에러 발생
-        if (!bookClubRepository.existsById(bookClubId)) {
-            throw new CustomException(ErrorCode.INVALID_CLUB);
-        }
+
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+
 
         //탈퇴 로직
-        BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId);
+        BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClub(userDetails.getUser().getUserId(), bookClub);
         if (bookClubMember != null) {
             //탈퇴하려는 USER가 현재 리더일 경우
             if(bookClubMember.getClubMemberRole().equals(BookClubMemberRole.LEADER)){
@@ -82,16 +84,17 @@ public class BookClubMemberService {
     }
 
     public String approveMember(Long bookClubId, Long userId, CustomUserDetails userDetails) {
+
         //존재하지 않는 북클럽일 경우
-        if (!bookClubRepository.existsById(bookClubId)) {
-            throw new CustomException(ErrorCode.INVALID_CLUB);
-        }
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+
         //가입 신청이 안된 유저 일경우
-        if (!bookClubMemberRepository.existsByUserIdAndBookClubId(userId,bookClubId)){
+        if (!bookClubMemberRepository.existsByUserIdAndBookClub(userId,bookClub)){
             throw new CustomException(ErrorCode.NOT_MEMBER);
         }
         //이미 가입된 유저일 경우
-        BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClubId(userId,bookClubId);
+        BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClub(userId,bookClub);
         if (bookClubMember.getIsApprove() == Boolean.TRUE) {
             throw new CustomException(ErrorCode.ALREADY_JOINED);
         }else{
@@ -104,24 +107,25 @@ public class BookClubMemberService {
 
     public List<BookClubMemberResponse> findMember(Long bookClubId, CustomUserDetails userDetails) {
         //존재하지 않는 북클럽일 경우
-        if (!bookClubRepository.existsById(bookClubId)) {
-            throw new CustomException(ErrorCode.INVALID_CLUB);
-        }
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+
         //가입 신청이 안된 유저 일경우
-        if (!bookClubMemberRepository.existsByUserIdAndBookClubId(userDetails.getUser().getUserId(), bookClubId)) {
+        if (!bookClubMemberRepository.existsByUserIdAndBookClub(userDetails.getUser().getUserId(), bookClub)) {
             throw new CustomException(ErrorCode.NOT_MEMBER);
         }
-        List<BookClubMember> bookClubMemberList = bookClubMemberRepository.findByBookClubId(bookClubId);
+        List<BookClubMember> bookClubMemberList = bookClubMemberRepository.findByBookClub(bookClub);
         List<BookClubMemberResponse> bookClubMemberResponses = bookClubMemberList.stream()
                 .map(member -> new BookClubMemberResponse(
                         member.getBookClubMemberId(),
                         member.getUserId(),
                         member.getClubMemberRole(),
-                        member.getBookClubId(),
+                        member.getBookClub(),
                         member.getIsApprove(),
                         member.getJoinMessage(),
-                        member.getDelYn()
-                ))
+                        member.getDelYn())
+
+                )
                 .collect(Collectors.toList());
 
         return bookClubMemberResponses;

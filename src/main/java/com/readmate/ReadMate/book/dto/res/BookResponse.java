@@ -18,7 +18,7 @@ public class BookResponse {
 
     private Long totalPages;
 
-    private Genre genre;
+//    private Genre genre;
     private String description;
 
     private String publisher;

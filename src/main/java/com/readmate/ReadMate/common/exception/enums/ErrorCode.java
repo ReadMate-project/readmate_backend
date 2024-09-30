@@ -39,6 +39,7 @@ public enum ErrorCode {
     NOT_MEMBER(409, "CLUB005", "가입하지 않은 클럽입니다."),
     INVALID_LEAVE(408, "CLUB006", "리더는 탈퇴할 수 없습니다.리더를 수정해주세요"),
     INVALID_MEMBER(409, "CLUB007", "가입하지 않은 멤버 입니다"),
+    INVALID_BOOK_DATE(409,"CLUB008","날짜를 잘못 선택하셨습니다"),
 
     //BOOK
 
@@ -47,7 +48,11 @@ public enum ErrorCode {
 
     INVALID_GENRE(404, "BOOK003", "존재하지 않는 장르 입니다."),
 
-    BOOK_NOT_FOUND(404, "BOOK003", "존재하지 않는 장르 입니다."),
+    BOOK_NOT_FOUND(404, "BOOK004", "책을 찾을 수 없습니다"),
+
+
+    // MISSION
+    INVALID_MISSION(404, "MISSION001", "존재하지 않는 미션입니다."),
 
 
     // COMMENT

@@ -1,5 +1,6 @@
 package com.readmate.ReadMate.bookclub.dto.res;
 
+import com.readmate.ReadMate.bookclub.entity.BookClub;
 import com.readmate.ReadMate.bookclub.entity.BookClubMemberRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ public class BookClubMemberResponse {
     private Long userId;
     @Enumerated(EnumType.STRING)
     private BookClubMemberRole clubMemberRole;
-    private Long bookClubId;
+    private BookClub bookClub;
     private Boolean isApprove;
     private String joinMessage;
     private String delYn;

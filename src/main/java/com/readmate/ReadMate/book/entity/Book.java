@@ -23,8 +23,8 @@ public class Book {
     private String author;
     @Column(name = "total_pages")
     private Long totalPages;
-    @Column(name = "genre")
-    private Genre genre;
+//    @Column(name = "genre")
+//    private Genre genre;
     @Column(name = "description")
     private String description;
     @Column(name = "publisher")
@@ -33,4 +33,9 @@ public class Book {
     private Long isbn13;
     @Column(name = "book_cover")
     private String bookCover;
+
+
+    @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
+    @Builder.Default
+    private String delYn = "N";
 }

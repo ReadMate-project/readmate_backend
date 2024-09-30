@@ -25,7 +25,6 @@ public class BookClubController {
     @PostMapping
     @Operation(summary = "북클럽 생성하기", description = "새로운 북클럽을 생성합니다")
     public  ResponseEntity<?> createClub(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BookClubRequest clubRequest){
-        System.out.println("clubRequest = " + clubRequest);
         return ResponseEntity.ok(BasicResponse.ofCreateSuccess(bookClubService.createClub(userDetails,clubRequest)));
     }
 
