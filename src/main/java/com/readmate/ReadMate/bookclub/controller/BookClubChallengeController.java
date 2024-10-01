@@ -32,8 +32,6 @@ public class BookClubChallengeController {
         )));
 
     }
-
-
     /**
      * 챌린지 인증
      *

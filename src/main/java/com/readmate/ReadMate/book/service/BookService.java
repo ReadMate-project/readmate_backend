@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -137,7 +138,7 @@ public class BookService {
                     .title(title)
                     .author(author)
                     .description(description)
-                    .isbn13(Long.parseLong(isbn13Str))
+                    .isbn13(isbn)
                     .publisher(publisher)
                     .totalPages(totalPages)
                     .bookCover(coverUrl)

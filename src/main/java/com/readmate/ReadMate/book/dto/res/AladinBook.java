@@ -1,6 +1,7 @@
 package com.readmate.ReadMate.book.dto.res;
 
 import lombok.Data;
+import org.w3c.dom.Text;
 
 
 @Data

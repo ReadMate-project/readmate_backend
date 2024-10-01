@@ -2,6 +2,7 @@ package com.readmate.ReadMate.book.dto.res;
 
 import com.readmate.ReadMate.common.genre.Genre;
 import lombok.*;
+import org.w3c.dom.Text;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +24,7 @@ public class BookResponse {
 
     private String publisher;
 
-    private Long isbn13;
+    private String isbn13;
 
     private String bookCover;
 }
