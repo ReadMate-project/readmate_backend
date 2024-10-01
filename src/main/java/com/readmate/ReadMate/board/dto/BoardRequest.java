@@ -15,6 +15,7 @@ public class BoardRequest {
     private Integer currentPage;
     private String content;
     private String title;
+    private Long dailyMissionId;
 
     //어떤 게시판인지르 알아야 각각에 대해서 처리가 가능 -> 프론트에서 받을 것이다.
     private BoardType boardType;
