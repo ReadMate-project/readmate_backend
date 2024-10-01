@@ -20,18 +20,14 @@ public class BookClubRequest {
 
     private String bookClubName;
     private String description;
-    private List<Genre> bookClubGenre;
-    private long leaderId;
-    private Long bookClubImageId;
-    private String notify;
+    private Long leaderId;
+    private List<BookInfoRequest> bookList;
 
-    private boolean isPublic;
+    //진행 기간
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate startDate;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate endDate;
-
-    private List<Long> bookList;
 
 
     // 모집 기간

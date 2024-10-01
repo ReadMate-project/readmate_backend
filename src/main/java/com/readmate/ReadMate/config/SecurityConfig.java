@@ -4,6 +4,7 @@ package com.readmate.ReadMate.config;
 import com.readmate.ReadMate.login.security.CustomUserDetailsService;
 import com.readmate.ReadMate.login.security.JwtAuthenticationFilter;
 import com.readmate.ReadMate.login.service.TokenService;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -37,11 +38,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(URL_TO_PERMIT).permitAll()
                         .anyRequest().authenticated()
-
                 )
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(withDefaults())
+                .sessionManagement(session   -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new JwtAuthenticationFilter(customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

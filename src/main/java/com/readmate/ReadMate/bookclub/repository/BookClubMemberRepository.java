@@ -1,5 +1,6 @@
 package com.readmate.ReadMate.bookclub.repository;
 
+import com.readmate.ReadMate.bookclub.entity.BookClub;
 import com.readmate.ReadMate.bookclub.entity.BookClubMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,10 +10,19 @@ import java.util.List;
 
 @Repository
 public interface BookClubMemberRepository extends JpaRepository<BookClubMember, Long> {
-    boolean existsByUserIdAndBookClubId(Long userId, Long bookClubId);
+    boolean existsByUserIdAndBookClub(Long userId, BookClub bookClub);
 
-    BookClubMember findByUserIdAndBookClubId(Long userId, Long bookClubId);
+    BookClubMember findByUserIdAndBookClub(Long userId, BookClub bookClub);
 
-    List<BookClubMember> findByBookClubId(Long bookClubId);
+
+    List<BookClubMember> findByBookClub(BookClub bookClub);
+
+    List<BookClubMember> findAllByDelYnAndBookClub(String delYn, BookClub bookClub);
+
+
+    // In BookClubMemberRepository
+    List<BookClubMember> findAllByDelYnAndUserId(String delYn, Long userId);
+
+
 }
 

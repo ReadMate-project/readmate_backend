@@ -1,7 +1,9 @@
 package com.readmate.ReadMate.bookclub.dto.res;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.bookclub.entity.BookClub;
+import com.readmate.ReadMate.bookclub.entity.BookClubChallenge;
 import com.readmate.ReadMate.common.genre.Genre;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
@@ -22,18 +24,13 @@ public class BookClubResponse {
     private Long bookClubId;
     private String bookClubName;
     private String description;
-    private List<Genre> bookClubGenres;
-
     private long leaderId;
-    private Long bookClubImageId;
-    private String notify;
-
-    private boolean isPublic;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
+    private String bookClubKey;
 
     // 모집 기간
     @NotNull
@@ -47,29 +44,20 @@ public class BookClubResponse {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Builder.Default
     private LocalDate recruitmentEndDate = LocalDate.now().plusMonths(1); // Default to one month later
+    private List<BookClubChallengeResponse> challenges;
 
 
-    private List<BookClubBookResponse> bookClubBooks;
-
-    private String bookClubKey;
-
-
-
-    public void createBookClubResponse(BookClub bookClub,  List<BookClubBookResponse> bookClubBooks) {
-        this.bookClubBooks = bookClubBooks;
+    public void createBookClubResponse(BookClub bookClub, List<BookClubChallengeResponse> challenges) {
         this.bookClubId = bookClub.getBookClubId();
         this.bookClubName = bookClub.getBookClubName();
         this.description = bookClub.getDescription();
-        this.bookClubGenres = bookClub.getBookClubGenre();
         this.leaderId = bookClub.getLeaderId();
-        this.bookClubImageId = bookClub.getBookClubImageID();
         this.startDate = bookClub.getStartDate();
         this.endDate = bookClub.getEndDate();
-        this.notify = bookClub.getNotify();
-        this.isPublic = bookClub.getIsPublic();
         this.recruitmentEndDate = bookClub.getRecruitmentEndDate();
         this.recruitmentStartDate = bookClub.getRecruitmentStartDate();
         this.bookClubKey = bookClub.getBookClubKey();
+        this.challenges = challenges;
 
     }
 

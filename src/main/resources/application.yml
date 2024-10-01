@@ -38,6 +38,9 @@ spring :
 kakao:
   admin-key: ${KAKAO_ADMIN_KEY}
 
+aladin:
+  url: ${ALADIN_API}
+
 jwt:
   secret-key: ${JWT_SECRET_KEY}
 

@@ -24,13 +24,15 @@ public class BookClubListResponse {
     private String bookClubName;
     private String description;
 
-    private List<Genre> bookClubGenres;
+    private String bookCover;
 
-    private Long bookClubImageID;
+
+//    private Long bookClubImageID;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate startDate;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate endDate;
+
 
     // 모집 기간
     @NotNull
@@ -44,6 +46,7 @@ public class BookClubListResponse {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Builder.Default
     private LocalDate recruitmentEndDate = LocalDate.now().plusMonths(1); // Default to one month later
+
 
 
 }
