@@ -8,6 +8,7 @@ import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.repository.BoardRepository;
 import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.bookclub.dto.res.BookClubMemberResponse;
+import com.readmate.ReadMate.bookclub.service.BookClubChallengeService;
 import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
@@ -38,11 +39,12 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BookClubMemberService bookClubMemberService;
+    private final BookClubChallengeService bookClubChallengeService;
 
 
     //0.게시판 작성
     //0-1. 일반 자유게시판일 경우 로그인 된 유저만 작성
-    //0-2. 피드 -> 나만 작성할 수 있음 
+    //0-2. 피드 -> 나만 작성할 수 있음 1.그냥 나만의 피드 작성 2. 챌린지용 피드가 존재
     //0-3. 북클럽 내 자유게시판 -> 북클럽 회원만 작성할 수 있음
 
     @PostMapping
@@ -50,14 +52,11 @@ public class BoardController {
     public ResponseEntity<BasicResponse<Board>> createBoard(@RequestBody BoardRequest boardRequest,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        if (userDetails == null || userDetails.getUser() == null) { //해당 오류가 발생하면 로그인화면으로 redirect
-
-            BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
-            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
+        if (userDetails == null || userDetails.getUser() == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-
-        //게시판에 따른 권한 체크
+        // 게시판에 따른 권한 체크
         BoardType boardType = boardRequest.getBoardType();
 
         switch (boardType) {
@@ -67,51 +66,63 @@ public class BoardController {
                 break;
 
             case FEED:
-                //피드는 무조건적으로 책을 선정해야한다. -> 챌린지 인증을 위해
+                // 피드는 무조건 책이 선정되어야 함 -> 챌린지 인증을 위해
                 if (boardRequest.getBookId() == null) {
-                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError(
-                            "피드에는 bookId가 필수입니다.", HttpStatus.BAD_REQUEST.value());
-                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.BAD_REQUEST);
+                    throw new CustomException(ErrorCode.INVALID_REQUEST);
+                }
+
+                // 챌린지 인증을 위한 북클럽 ID가 있는 경우
+                if (boardRequest.getBookclubId() != null) {
+                    try {
+                        // 북클럽 멤버 여부 확인
+                        bookClubMemberService.findMember(boardRequest.getBookclubId(), userDetails);
+                    } catch (CustomException e) {
+                        throw new CustomException(ErrorCode.FORBIDDEN);
+                    }
                 }
                 break;
 
             case CLUB_BOARD:
-                if (userDetails == null || userDetails.getUser() == null) {
-                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("인증된 유저가 아닙니다.", HttpStatus.UNAUTHORIZED.value());
-                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
-                }
-
                 try {
-                    // 북클럽 멤버 여부 확인만 수행 (리턴값 사용하지 않음)
+                    // 북클럽 멤버 여부 확인
                     bookClubMemberService.findMember(boardRequest.getBookclubId(), userDetails);
-
                     boardRequest.setBookId(null);
                 } catch (CustomException e) {
-                    BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("해당 북클럽의 회원이 아닙니다.", HttpStatus.FORBIDDEN.value());
-                    return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
+                    throw new CustomException(ErrorCode.FORBIDDEN);
                 }
                 break;
 
             default:
-                BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("잘못된 게시판 타입입니다.", HttpStatus.BAD_REQUEST.value());
-                return new ResponseEntity<>(errorResponseWrapper, HttpStatus.BAD_REQUEST);
+                throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
-
 
         Board board = new Board();
         board.setUserId(boardRequest.getUserId());
-        board.setBookId(boardRequest.getBookId()); //BOARD와 CLUB_BOARD의 경우 null로 설정됨
-        board.setBookclubId(boardRequest.getBookclubId()); //BOARD같은 경우 null로 설정 (자유게시판이니)
+        board.setBookId(boardRequest.getBookId());
+        board.setBookclubId(boardRequest.getBookclubId());
         board.setContent(boardRequest.getContent());
         board.setCreatedAt(LocalDateTime.now());
         board.setTitle(boardRequest.getTitle());
         board.setBoardType(boardType);
 
-        Board savedBoard = boardService.saveBoard(board);
-        BasicResponse<Board> response = BasicResponse.ofCreateSuccess(savedBoard);
+        System.out.println("Finding member for bookclubId: " + boardRequest.getBookclubId());
+        System.out.println("Saving board with userId: " + board.getUserId() + ", bookId: " + board.getBookId() + ", bookclubId: " + board.getBookclubId());
 
+
+
+        // 게시물 저장
+        Board savedBoard = boardService.saveBoard(board);
+
+        // 챌린지 인증 미션 완료 처리 (bookclubId가 있는 경우)
+        if (boardType == BoardType.FEED && boardRequest.getBookclubId() != null) {
+            Long dailyMissionId = boardRequest.getDailyMissionId();
+            bookClubChallengeService.completeMission(dailyMissionId, userDetails.getUser().getUserId());
+        }
+
+        BasicResponse<Board> response = BasicResponse.ofCreateSuccess(savedBoard);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
 
 
     //1.게시판 수정
@@ -257,7 +268,7 @@ public class BoardController {
         else if (boardType == BoardType.CLUB_BOARD) {
             // CLUB_BOARD는 로그인한 유저 + 해당 북클럽 회원만 조회 가능
             if (userDetails == null || userDetails.getUser() == null) {
-                throw new CustomException(ErrorCode.UNAUTHORIZED); // UNAUTHORIZED 오류 발생
+                throw new CustomException(ErrorCode.UNAUTHORIZED);
             }
 
             Long userId = userDetails.getUser().getUserId();
@@ -267,7 +278,7 @@ public class BoardController {
 
             // memberResponses를 사용해 북클럽 회원인지 확인
             if (memberResponses.isEmpty()) {
-                throw new CustomException(ErrorCode.UNAUTHORIZED); // UNAUTHORIZED 오류 발생
+                throw new CustomException(ErrorCode.UNAUTHORIZED);
             }
 
             // 로그인한 유저가 소속된 북클럽의 게시물 조회
@@ -275,11 +286,11 @@ public class BoardController {
 
             // 게시물이 존재하지 않을 경우
             if (boardPage.isEmpty()) {
-                throw new CustomException(ErrorCode.INVALID_BOARD); // 존재하지 않는 게시물 오류 발생
+                throw new CustomException(ErrorCode.INVALID_BOARD);
             }
         }
         else {
-            throw new CustomException(ErrorCode.INVALID_BOARD); // 잘못된 게시판 타입 오류 발생
+            throw new CustomException(ErrorCode.INVALID_BOARD);
         }
 
         PageInfo pageInfo = new PageInfo(

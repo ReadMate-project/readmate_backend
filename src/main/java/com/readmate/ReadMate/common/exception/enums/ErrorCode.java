@@ -58,7 +58,10 @@ public enum ErrorCode {
     // COMMENT
     INVALID_COMMENT(404, "COMMENT001", "존재하지 않는 댓글입니다."),
     UNAUTHORIZED(403,"COMMENT002", "권한이 없습니다."),
-    COMMENT_NOT_FOUND(404, "COMMENT003", "댓글을 찾을 수 없습니다.");
+    COMMENT_NOT_FOUND(404, "COMMENT003", "댓글을 찾을 수 없습니다."),
+    INVALID_REQUEST(404, "COMMON004", "잘못된 요청입니다."),
+    FORBIDDEN(404, "COMMON005", " 해당 북클럽의 회원이 아닙니다.");
+
 
 
 
