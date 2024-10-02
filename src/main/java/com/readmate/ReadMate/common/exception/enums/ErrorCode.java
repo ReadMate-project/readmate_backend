@@ -40,6 +40,13 @@ public enum ErrorCode {
     INVALID_LEAVE(408, "CLUB006", "리더는 탈퇴할 수 없습니다.리더를 수정해주세요"),
     INVALID_MEMBER(409, "CLUB007", "가입하지 않은 멤버 입니다"),
     INVALID_BOOK_DATE(409,"CLUB008","날짜를 잘못 선택하셨습니다"),
+    OVERLAPPING_BOOK_DATES(409,"CLUB009","날짜는 겹칠 수 없습니다"),
+    DUPLICATE_CLUB_NAME(409, "CLUB010", "이미 존재하는 북클럽 이름입니다."), // 클럽 이름 중복
+    INVALID_CLUB_DATES(400, "CLUB011", "북클럽의 시작일이 종료일보다 늦을 수 없습니다."), // 클럽 날짜 유효성 오류
+    INVALID_CLUB_MEMBER(404, "CLUB012", "존재하지 않는 클럽 멤버입니다."), // 클럽 멤버 유효성 오류
+    NOT_APPROVED_MEMBER(403, "CLUB013", "승인되지 않은 클럽 멤버입니다."), // 미승인된 클럽 멤버 오류
+
+
 
     //BOOK
 
@@ -53,6 +60,7 @@ public enum ErrorCode {
 
     // MISSION
     INVALID_MISSION(404, "MISSION001", "존재하지 않는 미션입니다."),
+    NO_CHALLENGE_TODAY(201,"MISSION002","오늘은 미션이 없습니다"),
 
 
     // COMMENT

@@ -10,6 +10,7 @@ import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
@@ -19,31 +20,31 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BookClubChallengeService {
 
     private final BookClubChallengeRepository bookClubChallengeRepository;
     private final DailyMissionRepository dailyMissionRepository;
     private final BookClubMemberRepository bookClubMemberRepository;
     private final BookClubRepository bookClubRepository;
-
     private final DailyMissionCompletionRepository dailyMissionCompletionRepository;
-
+    @Transactional
     public MissionResponse getClubChallenge(CustomUserDetails userDetails, Long bookClubId) {
 
         //접속한 USER (UserDetail ) 가 회원이 아니면 에러 처리
         if (!isUserMemberOfClub(userDetails, bookClubId)) {
-            throw new RuntimeException("User is not a member of this book club.");
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
         LocalDate today = LocalDate.now();
 
         BookClubChallenge currentChallenge = bookClubChallengeRepository
                 .findCurrentChallengeByBookClubIdAndDate(bookClubId, today);
 
-
-
+        //미션이 없을 경우 Return
         if (currentChallenge == null) {
-            throw new RuntimeException("No active challenge for today.");
+            throw new CustomException(ErrorCode.NO_CHALLENGE_TODAY);
         }
+
         DailyMission dailyMission = dailyMissionRepository
                 .findByChallengeAndMissionDate(currentChallenge, today);
 
@@ -67,7 +68,6 @@ public class BookClubChallengeService {
     }
 
 
-
     private boolean isUserMemberOfClub(CustomUserDetails userDetails, Long bookClubId) {
 
         BookClub bookClub = bookClubRepository.findById(bookClubId)
@@ -83,7 +83,6 @@ public class BookClubChallengeService {
 
 
     public void createClubChallenge(BookClub bookClub, Book book, LocalDate startDate, LocalDate endDate) {
-
         BookClubChallenge bookClubChallenge = new BookClubChallenge();
         bookClubChallenge.setBookClub(bookClub);
         bookClubChallenge.setStartDate(startDate);
@@ -99,6 +98,8 @@ public class BookClubChallengeService {
      * 북클럽 챌린지 생성
      */
     public void createMissionsForChallenge(BookClubChallenge challenge) {
+
+
         LocalDate startDate = challenge.getStartDate();
         LocalDate endDate = challenge.getEndDate();
         Long totalPages = challenge.getBook().getTotalPages();

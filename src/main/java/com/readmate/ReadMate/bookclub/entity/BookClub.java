@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.w3c.dom.Text;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,11 +27,12 @@ public class BookClub {
     @Column(name = "club_name")
     private String bookClubName;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "leader_id")
-    private long leaderId;
+    @NotNull
+    private Long leaderId;
 
     @NotNull
     @Column(name = "start_date")
@@ -61,13 +63,15 @@ public class BookClub {
 
     @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
     @Builder.Default
+    @NotNull
     private String delYn = "N";
 
     @Column(name = "book_club_key")
+    @NotNull
     private String bookClubKey;
 
     @OneToMany(mappedBy = "bookClub", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<BookClubChallenge> challenges; // 챌린지 리스트
+    private List<BookClubChallenge> challenges;
 
 
 
@@ -87,7 +91,6 @@ public class BookClub {
         this.setDescription(clubRequest.getDescription());
         this.setStartDate(clubRequest.getStartDate() != null ? clubRequest.getStartDate() : LocalDate.now());
         this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
-//        this.setBookClubGenre(clubRequest.getBookClubGenre());
         this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
         this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
     }

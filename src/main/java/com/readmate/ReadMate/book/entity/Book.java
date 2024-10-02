@@ -3,6 +3,7 @@ package com.readmate.ReadMate.book.entity;
 import com.readmate.ReadMate.common.genre.Genre;
 import jakarta.persistence.*;
 import lombok.*;
+import org.w3c.dom.Text;
 
 @Entity
 @Builder
@@ -23,14 +24,15 @@ public class Book {
     private String author;
     @Column(name = "total_pages")
     private Long totalPages;
+
 //    @Column(name = "genre")
 //    private Genre genre;
-    @Column(name = "description")
-    private String description;
+@Column(name = "description", columnDefinition = "TEXT") // Explicitly set as TEXT
+private String description;
     @Column(name = "publisher")
     private String publisher;
     @Column(name = "isbn13")
-    private Long isbn13;
+    private String isbn13;
     @Column(name = "book_cover")
     private String bookCover;
 

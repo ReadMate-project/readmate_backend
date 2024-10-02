@@ -3,6 +3,7 @@ package com.readmate.ReadMate.bookclub.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.w3c.dom.Text;
 
 @Builder
 @Entity
@@ -30,7 +31,6 @@ public class BookClubMember {
     @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
     @Builder.Default
     private String delYn = "N";
-
     public BookClub getBookClub() {
         return bookClub;
     }
