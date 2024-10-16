@@ -26,7 +26,8 @@ public enum ErrorCode {
     ACTIVE_BOARD(403, "BOARD002", "삭제되지 않은 게시물입니다. 복구할 필요 없습니다."),
     ALREADY_LIKED(409, "LIKE001", "이미 좋아요를 누른 게시물입니다."),
     NOT_LIKED(403, "LIKE002", "좋아요를 누르지 않은 게시물입니다. 삭제할 수 없습니다."),
-
+    UPDATE_NOTICE_FAILED(400, "BOARD003", "공지사항 수정에 실패했습니다."),
+    DELETE_NOTICE_FAILED(400, "BOARD004", "공지사항 삭제에 실패했습니다."),
 
     // BOOKCLUB
     INVALID_CLUB(404, "CLUB001", "존재하지 않는 클럽입니다."),
@@ -45,7 +46,7 @@ public enum ErrorCode {
     INVALID_CLUB_DATES(400, "CLUB011", "북클럽의 시작일이 종료일보다 늦을 수 없습니다."), // 클럽 날짜 유효성 오류
     INVALID_CLUB_MEMBER(404, "CLUB012", "존재하지 않는 클럽 멤버입니다."), // 클럽 멤버 유효성 오류
     NOT_APPROVED_MEMBER(403, "CLUB013", "승인되지 않은 클럽 멤버입니다."), // 미승인된 클럽 멤버 오류
-
+    NOT_LEADER(408,"CLUB014", "해당 클럽의 리더 멤버가 아닙니다."),
 
 
     //BOOK
