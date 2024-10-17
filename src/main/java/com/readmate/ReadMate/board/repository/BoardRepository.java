@@ -13,4 +13,5 @@ public interface BoardRepository  extends JpaRepository<Board, Long> {
 
     Page<Board> findByUserIdAndBoardType(Long userId, BoardType boardType, Pageable pageable);
     Page<Board> findByBoardType(BoardType boardType, Pageable pageable);
+    Page<Board> findByBookclubId(Long bookclubId, Pageable pageable);
 }

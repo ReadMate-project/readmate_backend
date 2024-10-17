@@ -260,15 +260,14 @@ public class BoardController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("page") int page,
             @RequestParam("size") int size,
-            @RequestParam("bookclubId") Long bookclubId) {
+            @RequestParam("bookclubId") Long bookclubId) { // 선택적 파라미터
 
         Page<Board> boardPage;
 
         if (boardType == BoardType.BOARD || boardType == BoardType.FEED) {
             // 로그인 유무와 상관없이 목록 조회 가능
-            boardPage = boardService.getBoardsByType(boardType, page, size);
-        }
-        else if (boardType == BoardType.CLUB_BOARD) {
+            boardPage = boardService.getBoardsByType(boardType, page, size, null);
+        } else if (boardType == BoardType.CLUB_BOARD) {
             // CLUB_BOARD는 로그인한 유저 + 해당 북클럽 회원만 조회 가능
             if (userDetails == null || userDetails.getUser() == null) {
                 throw new CustomException(ErrorCode.UNAUTHORIZED);
@@ -284,15 +283,14 @@ public class BoardController {
                 throw new CustomException(ErrorCode.UNAUTHORIZED);
             }
 
-            // 로그인한 유저가 소속된 북클럽의 게시물 조회
-            boardPage = boardService.getBoardsByUserIdAndType(userId, boardType, page, size);
+            // 로그인한 유저가 소속된 북클럽의 게시물 조회 (bookclubId를 사용)
+            boardPage = boardService.getBoardsByType(boardType, page, size, bookclubId); // bookclubId 사용
 
             // 게시물이 존재하지 않을 경우
             if (boardPage.isEmpty()) {
                 throw new CustomException(ErrorCode.INVALID_BOARD);
             }
-        }
-        else {
+        } else {
             throw new CustomException(ErrorCode.INVALID_BOARD);
         }
 
@@ -306,6 +304,9 @@ public class BoardController {
         BasicResponse<List<Board>> response = BasicResponse.ofSuccess(boardPage.getContent(), pageInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+
+
 
 
     //5. 게시판 상세 조회

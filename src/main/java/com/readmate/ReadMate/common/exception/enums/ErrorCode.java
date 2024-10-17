@@ -73,7 +73,10 @@ public enum ErrorCode {
 
     // AWS-S3
     FILE_CONVERT_FAIL(500, "S3_001", "파일 변환 실패"),
-    FILE_UPLOAD_FAIL(500, "S3_002", "파일 업로드 실패");
+    FILE_UPLOAD_FAIL(500, "S3_002", "파일 업로드 실패"),
+
+    //SORT
+    INVALID_SORT_TYPE(400, "COMMON006", "잘못된 정렬 타입입니다.");
 
 
 
