@@ -104,7 +104,7 @@ public class BoardController {
 
 
         Board board = new Board();
-        board.setUserId(boardRequest.getUserId());
+        board.setUserId(userDetails.getUser().getUserId());
         board.setBookId(boardRequest.getBookId());
         board.setBookclubId(boardRequest.getBookclubId());
         board.setContent(boardRequest.getContent());
