@@ -2,7 +2,7 @@ package com.readmate.ReadMate.login.service;
 
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import com.nimbusds.jose.shaded.gson.JsonParser;
-import com.readmate.ReadMate.login.dto.KakaoTokenResponse;
+import com.readmate.ReadMate.login.dto.res.KakaoTokenResponse;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.RefreshTokenRepository;
 import com.readmate.ReadMate.login.repository.UserRepository;
@@ -170,7 +170,7 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    public Optional<User> findUserById(Long userId) {
-        return userRepository.findById(userId);
+    public void updateUser(User user) {
+        userRepository.save(user);
     }
 }

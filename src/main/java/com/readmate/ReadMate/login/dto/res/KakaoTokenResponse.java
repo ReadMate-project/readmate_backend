@@ -1,4 +1,4 @@
-package com.readmate.ReadMate.login.dto;
+package com.readmate.ReadMate.login.dto.res;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

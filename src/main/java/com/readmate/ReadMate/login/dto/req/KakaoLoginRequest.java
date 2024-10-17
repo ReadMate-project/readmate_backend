@@ -1,4 +1,4 @@
-package com.readmate.ReadMate.login.dto;
+package com.readmate.ReadMate.login.dto.req;
 
 import com.readmate.ReadMate.common.genre.Genre;
 import lombok.AllArgsConstructor;

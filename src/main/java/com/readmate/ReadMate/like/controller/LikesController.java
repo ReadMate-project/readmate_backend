@@ -2,7 +2,7 @@ package com.readmate.ReadMate.like.controller;
 
 import com.readmate.ReadMate.like.entity.Likes;
 import com.readmate.ReadMate.like.service.LikesSerivce;
-import com.readmate.ReadMate.login.dto.BasicResponse;
+import com.readmate.ReadMate.login.dto.res.BasicResponse;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
