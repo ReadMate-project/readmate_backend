@@ -31,8 +31,10 @@ public class BookService {
     private final BookRepository bookRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // 책 저장하는 로직
+
     /**
-     * 책 저장
+     * Request 로 책 저장
      */
     public String saveBook(BookRequest bookRequest){
         Book book = Book.builder()
@@ -47,45 +49,6 @@ public class BookService {
                 .build();
         bookRepository.save(book);
         return "책이 저장되었습니다";
-    }
-    /**
-     * DB에 저장된 Book ID로 조회하기
-     */
-    public BookResponse getBookById(Long bookId) {
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
-        return BookResponse.builder()
-                .bookId(book.getBookId())
-                .description(book.getDescription())
-//                .genre(book.getGenre())
-                .isbn13(book.getIsbn13())
-                .publisher(book.getPublisher())
-                .totalPages(book.getTotalPages())
-                .title(book.getTitle())
-                .bookCover(book.getBookCover())
-                .author(book.getAuthor())
-                .build();
-
-
-    }
-    /**
-     * Book ISBN13으로 조회하기
-     */
-    public BookResponse getBookByIsbn(Long isbn13) {
-        Book book = bookRepository.findByIsbn13(isbn13)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
-
-        return BookResponse.builder()
-                .bookId(book.getBookId())
-                .description(book.getDescription())
-//                .genre(book.getGenre())
-                .isbn13(book.getIsbn13())
-                .publisher(book.getPublisher())
-                .totalPages(book.getTotalPages())
-                .title(book.getTitle())
-                .bookCover(book.getBookCover())
-                .author(book.getAuthor())
-                .build();
     }
 
     /**
@@ -152,6 +115,49 @@ public class BookService {
             throw new CustomException(ErrorCode.API_CALL_FAILED);
         }
     }
+
+    //조회하는 로직
+
+    /**
+     * DB에 저장된 Book ID로 조회하기
+     */
+    public BookResponse getBookById(Long bookId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
+        return BookResponse.builder()
+                .bookId(book.getBookId())
+                .description(book.getDescription())
+//                .genre(book.getGenre())
+                .isbn13(book.getIsbn13())
+                .publisher(book.getPublisher())
+                .totalPages(book.getTotalPages())
+                .title(book.getTitle())
+                .bookCover(book.getBookCover())
+                .author(book.getAuthor())
+                .build();
+
+
+    }
+    /**
+     * Book ISBN13으로 조회하기
+     */
+    public BookResponse getBookByIsbn(Long isbn13) {
+        Book book = bookRepository.findByIsbn13(isbn13)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
+
+        return BookResponse.builder()
+                .bookId(book.getBookId())
+                .description(book.getDescription())
+//                .genre(book.getGenre())
+                .isbn13(book.getIsbn13())
+                .publisher(book.getPublisher())
+                .totalPages(book.getTotalPages())
+                .title(book.getTitle())
+                .bookCover(book.getBookCover())
+                .author(book.getAuthor())
+                .build();
+    }
+
 
     public Long getItemPage(Long isbn13){
         String url = String.format("%s&ItemId=%s", aladinUrl, isbn13);
