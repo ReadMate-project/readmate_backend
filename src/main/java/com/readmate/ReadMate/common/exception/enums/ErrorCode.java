@@ -68,8 +68,11 @@ public enum ErrorCode {
     UNAUTHORIZED(403,"COMMENT002", "권한이 없습니다."),
     COMMENT_NOT_FOUND(404, "COMMENT003", "댓글을 찾을 수 없습니다."),
     INVALID_REQUEST(404, "COMMON004", "잘못된 요청입니다."),
-    FORBIDDEN(404, "COMMON005", " 해당 북클럽의 회원이 아닙니다.");
+    FORBIDDEN(404, "COMMON005", " 해당 북클럽의 회원이 아닙니다."),
 
+    // AWS-S3
+    FILE_CONVERT_FAIL(500, "S3_001", "파일 변환 실패"),
+    FILE_UPLOAD_FAIL(500, "S3_002", "파일 업로드 실패");
 
 
 
