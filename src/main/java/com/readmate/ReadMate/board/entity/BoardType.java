@@ -7,5 +7,5 @@ public enum BoardType {
     * Feed -> 내 피드용 게시판 ex) 인스타 피드
     * CLUB_BOARD -> 북클럽용 자유 게시판
     * */
-    BOARD, FEED, CLUB_BOARD
+    BOARD, FEED, CLUB_BOARD, NOTICE
 }

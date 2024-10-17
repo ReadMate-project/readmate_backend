@@ -1,14 +1,20 @@
 package com.readmate.ReadMate.board.service;
 
+import com.readmate.ReadMate.board.dto.BoardRequest;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.repository.BoardRepository;
+import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.common.exception.CustomException;
+import com.readmate.ReadMate.login.security.CustomUserDetails;
+import com.readmate.ReadMate.login.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +23,8 @@ import java.util.Optional;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final BookClubMemberService bookClubMemberService;
+    private final CustomUserDetailsService userDetailsService;
 
     //0.게시판 작성
     public Board saveBoard(Board board) {
