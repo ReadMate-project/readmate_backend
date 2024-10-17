@@ -1,9 +1,10 @@
 package com.readmate.ReadMate.login.controller;
 
 
-import com.readmate.ReadMate.login.dto.BasicResponse;
-import com.readmate.ReadMate.login.dto.KakaoLoginRequest;
-import com.readmate.ReadMate.login.dto.KakaoTokenRequest;
+import com.readmate.ReadMate.login.dto.req.UserUpdateRequest;
+import com.readmate.ReadMate.login.dto.res.BasicResponse;
+import com.readmate.ReadMate.login.dto.req.KakaoLoginRequest;
+import com.readmate.ReadMate.login.dto.req.KakaoTokenRequest;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
@@ -72,7 +73,6 @@ public class UserController {
                 userService.validateNickname(nickname);
 
                 kakaoUser.setNickname(nickname);
-                kakaoUser.setContent(kakaoLoginRequest.getContent());
                 kakaoUser.setFavoriteGenre(kakaoLoginRequest.getFavoriteGenre());
 
                 user = userService.signup(kakaoUser);
@@ -90,11 +90,9 @@ public class UserController {
                     refreshToken = tokenService.createRefreshToken(user);
                     tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
                 }
-                
 
                 //해당 토큰은 accessToken을 JWT로 변환해서 보내는 것이기에 보안에서 문제 없음
                 String newAccessToken  = tokenService.renewAccessToken(refreshToken);
-
 
                 // 사용자 인증 처리
                 CustomUserDetails userDetails = new CustomUserDetails(user);
@@ -192,14 +190,37 @@ public class UserController {
     @Operation(summary = "현재 사용자 정보 가져오기", description = "현재 인증된 사용자 정보를 가져오는 API")
     public ResponseEntity<BasicResponse<User>> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
-//        //현재 인증된 사용자 정보 출력을 위한 것
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//        System.out.println("현재 인증된 사용자: " + authentication.getPrincipal());
-
         //인증된 사용자 정보 가지고 오기
         User user = userDetails.getUser();
         System.out.println("userDetail: " + userDetails.getUser());
         return ResponseEntity.ok(BasicResponse.ofSuccess(user));
     }
+
+
+    //6. 마이페이지 -> 유저정보 수정
+    @Operation(summary = "유저 정보 수정", description = "마이페이지 유저정보 수정 API")
+    @PatchMapping("/user/update")
+    public ResponseEntity<BasicResponse<String>> updateUser(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UserUpdateRequest userUpdateRequest) {
+
+        try {
+            // 현재 인증된 사용자 정보 가져오기
+            User user = userDetails.getUser();
+
+            user.setNickname(userUpdateRequest.getNickname());
+            user.setProfileImageUrl(userUpdateRequest.getProfileImageUrl()); 
+            user.setFavoriteGenre(userUpdateRequest.getFavoriteGenre());
+            user.setContent(userUpdateRequest.getContent());
+
+            userService.updateUser(user);
+
+            BasicResponse<String> response = BasicResponse.ofSuccess("유저 정보 수정 성공");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            BasicResponse<String> response = BasicResponse.ofFailure("처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

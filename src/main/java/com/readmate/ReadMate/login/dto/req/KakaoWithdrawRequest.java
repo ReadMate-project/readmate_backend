@@ -1,4 +1,4 @@
-package com.readmate.ReadMate.login.dto;
+package com.readmate.ReadMate.login.dto.req;
 
 public class KakaoWithdrawRequest {
     private String accessToken;

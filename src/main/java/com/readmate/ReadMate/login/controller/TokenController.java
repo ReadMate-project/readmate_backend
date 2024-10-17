@@ -1,7 +1,7 @@
 package com.readmate.ReadMate.login.controller;
 
-import com.readmate.ReadMate.login.dto.BasicResponse;
-import com.readmate.ReadMate.login.dto.TokenRequest;
+import com.readmate.ReadMate.login.dto.res.BasicResponse;
+import com.readmate.ReadMate.login.dto.req.TokenRequest;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
