@@ -5,9 +5,9 @@ import com.readmate.ReadMate.board.dto.BoardUpdateRequest;
 import com.readmate.ReadMate.board.dto.PageInfo;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
-import com.readmate.ReadMate.board.repository.BoardRepository;
 import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.bookclub.dto.res.BookClubMemberResponse;
+import com.readmate.ReadMate.bookclub.entity.BookClubMemberRole;
 import com.readmate.ReadMate.bookclub.service.BookClubChallengeService;
 import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
 import com.readmate.ReadMate.common.exception.CustomException;
@@ -15,10 +15,8 @@ import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.common.message.ErrorResponse;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
-import com.readmate.ReadMate.login.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -26,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,7 +45,6 @@ public class BoardController {
     //0-1. 일반 자유게시판일 경우 로그인 된 유저만 작성
     //0-2. 피드 -> 나만 작성할 수 있음 1.그냥 나만의 피드 작성 2. 챌린지용 피드가 존재
     //0-3. 북클럽 내 자유게시판 -> 북클럽 회원만 작성할 수 있음
-
     @PostMapping
     @Operation(summary = "게시물 작성", description = "게시물 작성 API")
     public ResponseEntity<BasicResponse<Board>> createBoard(@RequestBody BoardRequest boardRequest,
@@ -92,9 +90,18 @@ public class BoardController {
                 }
                 break;
 
+            case NOTICE:
+                // 공지사항 작성 시 북클럽 리더 확인!
+                if (boardRequest.getBookclubId() == null) {
+                    throw new CustomException(ErrorCode.INVALID_REQUEST); // 북클럽 ID는 필수
+                }
+                validateLeader(boardRequest.getBookclubId(), userDetails);
+                break;
+
             default:
                 throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
+
 
         Board board = new Board();
         board.setUserId(boardRequest.getUserId());
@@ -104,10 +111,6 @@ public class BoardController {
         board.setCreatedAt(LocalDateTime.now());
         board.setTitle(boardRequest.getTitle());
         board.setBoardType(boardType);
-
-        System.out.println("Finding member for bookclubId: " + boardRequest.getBookclubId());
-        System.out.println("Saving board with userId: " + board.getUserId() + ", bookId: " + board.getBookId() + ", bookclubId: " + board.getBookclubId());
-
 
 
         // 게시물 저장
@@ -340,4 +343,15 @@ public class BoardController {
         return ResponseEntity.ok(board);
     }
 
+    // 북클럽 리더인지 확인하는 메서드 -> 공지사항땜에 필요
+    private void validateLeader(Long bookclubId, CustomUserDetails userDetails) {
+        List<BookClubMemberResponse> members = bookClubMemberService.findMember(bookclubId, userDetails);
+        boolean isLeader = members.stream()
+                .anyMatch(member -> member.getUserId().equals(userDetails.getUser().getUserId()) &&
+                        member.getClubMemberRole().equals(BookClubMemberRole.LEADER));
+
+        if (!isLeader) {
+            throw new CustomException(ErrorCode.NOT_LEADER);
+        }
+    }
 }
