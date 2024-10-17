@@ -67,11 +67,12 @@ public class CommentController {
         }
 
         // 댓글 저장
-        Comment comment = commentService.saveComment(commentRequest, userDetails.getUser().getUserId());
+        Comment comment = commentService.saveComment(commentRequest, userDetails.getUser().getUserId(), boardId);
 
         BasicResponse<Comment> response = BasicResponse.ofSuccess(comment);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
 
     //2. 댓글 수정
     @PatchMapping("/{commentId}")
@@ -120,6 +121,28 @@ public class CommentController {
         BasicResponse<Void> response = BasicResponse.ofSuccess(null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+
+    //4. 댓글 최신순 or 등록순으로 정렬
+    @GetMapping("/{boardId}/comments")
+    @Operation(summary = "댓글 목록 조회", description = "댓글 목록을 조회할 때 정렬 기준을 선택할 수 있습니다.")
+    public ResponseEntity<BasicResponse<List<Comment>>> getComments(
+            @PathVariable("boardId") Long boardId,
+            @RequestParam(value = "sort", required = false, defaultValue = "latest") String sort) // 정렬 디폴트가 최신순
+    {
+
+        // 해당 게시판이 존재하는지 확인
+        Board board = boardService.findById(boardId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOARD));
+
+        // 댓글 목록 조회
+        List<Comment> comments = commentService.findCommentsByBoardId(boardId, sort);
+
+        // 응답 객체 생성
+        BasicResponse<List<Comment>> response = BasicResponse.ofSuccess(comments);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 
 
 }

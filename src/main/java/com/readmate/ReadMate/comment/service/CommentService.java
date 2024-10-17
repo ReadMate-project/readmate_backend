@@ -24,9 +24,9 @@ public class CommentService {
 
     //1. 댓글 작성
     @Transactional
-    public Comment saveComment(CommentRequest commentRequest, Long userId) {
+    public Comment saveComment(CommentRequest commentRequest, Long userId, Long boardId) {
         Comment comment = new Comment();
-        comment.setBoardId(commentRequest.getBoardId());
+        comment.setBoardId(boardId);
         comment.setUserId(userId);
         comment.setContent(commentRequest.getContent());
         return commentRepository.save(comment);
@@ -64,6 +64,18 @@ public class CommentService {
 
         commentRepository.delete(comment);
     }
+    
+
+    //4. 댓글 목록 조회
+    public List<Comment> findCommentsByBoardId(Long boardId, String sort) {
+        if ("registered".equals(sort)) {
+            return commentRepository.findByBoardIdOrderByCreatedAtAsc(boardId);
+        } else {
+            return commentRepository.findByBoardIdOrderByCreatedAtDesc(boardId);
+        }
+    }
+
+
 
 
 

@@ -6,12 +6,14 @@ import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.repository.BoardRepository;
 import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
 import com.readmate.ReadMate.common.exception.CustomException;
+import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import com.readmate.ReadMate.login.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -54,9 +56,14 @@ public class BoardService {
 
 
     //4. 게시판 별 게시글 목록 조회
-    public Page<Board> getBoardsByType(BoardType boardType, int page, int size) {
+    public Page<Board> getBoardsByType(BoardType boardType, int page, int size, Long bookclubId) {
         Pageable pageable = PageRequest.of(page, size);
-        return boardRepository.findByBoardType(boardType, pageable);
+
+        if (boardType == BoardType.CLUB_BOARD) {
+            return boardRepository.findByBookclubId(bookclubId, pageable); // bookclubId를 사용하여 클럽 게시글 반환
+        }
+
+        return boardRepository.findByBoardType(boardType, pageable); // 일반 게시글 반환
     }
 
     //5. 게시판 상세 조회
