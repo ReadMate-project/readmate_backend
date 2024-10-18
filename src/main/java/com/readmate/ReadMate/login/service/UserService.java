@@ -173,4 +173,9 @@ public class UserService {
     public void updateUser(User user) {
         userRepository.save(user);
     }
+
+    //닉네임 중복체크
+    public boolean isNicknameDuplicate(String nickname) {
+        return userRepository.existsByNickname(nickname);
+    }
 }

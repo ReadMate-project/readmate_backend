@@ -17,6 +17,7 @@ public enum ErrorCode {
     ALREADY_EXIST_USER(409, "USER001", "이미 존재하는 사용자입니다."),
     INVALID_USER(404, "USER002", "존재하지 않는 사용자입니다."),
     WRONG_PASSWORD(HttpStatus.UNAUTHORIZED.value(), "USER003", "잘못된 비밀번호입니다."),
+    DUPLICATE_NICKNAME(409, "USER004", "이미 존재하는 닉네임입니다."),
 
     // ROLE
     ACCESS_DENIED (403, "ROLE001", "접근 권한이 없습니다."),
