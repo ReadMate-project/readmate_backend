@@ -13,4 +13,7 @@ public interface BookClubRepository extends JpaRepository<BookClub,Long>, JpaSpe
     boolean existsByBookClubName(String clubName);
 
     List<BookClub> findAllByDelYn(String delYn);
+
+    List<BookClub> findAllByOrderByViewCountDesc();
+
 }

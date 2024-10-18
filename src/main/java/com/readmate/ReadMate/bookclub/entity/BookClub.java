@@ -73,7 +73,11 @@ public class BookClub {
     @OneToMany(mappedBy = "bookClub", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<BookClubChallenge> challenges;
 
-
+    
+    //인기 있는 북클럽 정렬을 위해 컬럼 추가
+    @Column(name = "view_count")
+    @Builder.Default
+    private Long viewCount = 0L;
 
     public void createBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());

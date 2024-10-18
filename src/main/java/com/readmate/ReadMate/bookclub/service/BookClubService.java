@@ -19,6 +19,7 @@
     import com.readmate.ReadMate.login.security.CustomUserDetails;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
+    import org.springframework.data.domain.Sort;
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,8 @@
     import java.util.List;
     import java.util.UUID;
     import java.util.stream.Collectors;
+
+    import static com.readmate.ReadMate.common.exception.enums.ErrorCode.INVALID_CLUB;
 
 
     @Service
@@ -172,7 +175,7 @@
 
             // 수정할 북클럽을 조회
             BookClub savedBookClub = bookClubRepository.findById(clubId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+                    .orElseThrow(() -> new CustomException(INVALID_CLUB));
 
             Long userId = userDetails.getUser().getUserId();
 
@@ -266,7 +269,7 @@
          */
         public String deleteClub(CustomUserDetails userDetails, Long clubId) {
             BookClub bookClub = bookClubRepository.findById(clubId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+                    .orElseThrow(() -> new CustomException(INVALID_CLUB));
 
             // UserID 가 리더 아이디와 같은지 확인 - 권한 여부
             if (!userDetails.getUser().getUserId().equals(bookClub.getLeaderId())) {
@@ -350,7 +353,7 @@
         // 활성 챌린지 가져오기
         public BookClubChallenge getCurrentChallenge(LocalDate currentDate, Long bookClubId) {
             BookClub bookClub = bookClubRepository.findById(bookClubId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+                    .orElseThrow(() -> new CustomException(INVALID_CLUB));
             List<BookClubChallenge> challenges = bookClubChallengeRepository.findAllByBookClub(bookClub);
             return challenges.stream()
                     .filter(challenge -> !challenge.getStartDate().isAfter(currentDate) &&
@@ -385,6 +388,23 @@
                             .build();
                     bookClubMemberRepository.save(bookClubMember);
             }
+
+        /**
+         * 북클럽 증가 메소드
+         */
+        public void incrementViewCount(Long bookClubId) {
+            BookClub bookClub = bookClubRepository.findById(bookClubId)
+                    .orElseThrow(() -> new CustomException(INVALID_CLUB));
+            bookClub.setViewCount(bookClub.getViewCount() + 1);
+
+            bookClubRepository.save(bookClub);
+        }
+
+        public List<BookClub> getBookClubsOrderedByViewCount() {
+            return bookClubRepository.findAll(Sort.by(Sort.Direction.DESC, "viewCount"));
+        }
+
+            
 
 
 

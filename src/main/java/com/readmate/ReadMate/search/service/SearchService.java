@@ -78,40 +78,4 @@ public class SearchService { //북클럽과 게시판 글 통합해서 검색되
         return new SearchResponse(boards, bookClubs, books);
     }
 
-
-
-//    public SearchResponse searchAll(String keyword, UserDetails userDetails) {
-//        List<Board> boards;
-//        List<BookClub> bookClubs;
-//        List<Book> books;
-//
-//        // 1. 공지사항은 제외하고 검색
-//        boards = boardRepository.findAll(Specification.where(BoardSpecification.containsTitleOrContent(keyword)));
-//
-//        // 2. 북클럽 게시글 검색 (로그인한 유저가 속한 북클럽만)
-//        if (userDetails instanceof CustomUserDetails) {
-//            Long userId = ((CustomUserDetails) userDetails).getUser().getUserId();
-//
-//            // 유저가 속한 북클럽들 조회
-//            List<Long> userBookClubIds = bookClubMemberRepository.findBookClubIdsByUserId(userId);
-//
-//            // 유저가 속한 북클럽의 게시글만 검색
-//            boards = boards.stream()
-//                    .filter(board -> board.getBoardType() != BoardType.CLUB_BOARD || userBookClubIds.contains(board.getBookclubId()))
-//                    .collect(Collectors.toList());
-//
-//            // 유저가 속한 북클럽 검색
-//            bookClubs = bookClubRepository.findAll(Specification.where(BookClubSpecification.containsCategoryOrName(keyword))
-//                    .and(BookClubSpecification.bookClubIdIn(userBookClubIds)));
-//        } else {
-//            // 인증되지 않은 유저는 일반 게시글과 피드가 검색가능
-//            bookClubs = bookClubRepository.findAll(Specification.where(BookClubSpecification.containsCategoryOrName(keyword)));
-//        }
-//
-//        // 3. 책 검색 추가
-//        books = bookRepository.findAll(BookSpecification.containsTitleOrAuthorOrDescriptionOrCategory(keyword));
-//
-//        return new SearchResponse(boards, bookClubs, books);
-//    }
-
 }
