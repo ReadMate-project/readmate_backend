@@ -4,6 +4,8 @@ import com.readmate.ReadMate.bookclub.entity.BookClub;
 import com.readmate.ReadMate.bookclub.entity.BookClubMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,6 +24,10 @@ public interface BookClubMemberRepository extends JpaRepository<BookClubMember, 
 
     // In BookClubMemberRepository
     List<BookClubMember> findAllByDelYnAndUserId(String delYn, Long userId);
+
+    @Query("SELECT bcm.bookClub.bookClubId FROM BookClubMember bcm WHERE bcm.userId = :userId")
+    List<Long> findBookClubIdsByUserId(@Param("userId") Long userId);
+
 
 
 }
