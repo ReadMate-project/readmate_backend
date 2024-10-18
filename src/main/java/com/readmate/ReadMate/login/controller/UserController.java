@@ -1,6 +1,7 @@
 package com.readmate.ReadMate.login.controller;
 
 
+import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.login.dto.req.UserUpdateRequest;
 import com.readmate.ReadMate.login.dto.res.BasicResponse;
 import com.readmate.ReadMate.login.dto.req.KakaoLoginRequest;
@@ -207,6 +208,14 @@ public class UserController {
         try {
             // 현재 인증된 사용자 정보 가져오기
             User user = userDetails.getUser();
+
+            // 닉네임 중복 체크
+            if (!user.getNickname().equals(userUpdateRequest.getNickname()) &&
+                    userService.isNicknameDuplicate(userUpdateRequest.getNickname())) {
+                BasicResponse<String> response = BasicResponse.ofFailure(ErrorCode.DUPLICATE_NICKNAME.getMessage(), HttpStatus.CONFLICT);
+                return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            }
+
 
             user.setNickname(userUpdateRequest.getNickname());
             user.setProfileImageUrl(userUpdateRequest.getProfileImageUrl()); 
