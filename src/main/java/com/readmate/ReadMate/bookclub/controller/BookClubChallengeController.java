@@ -32,10 +32,6 @@ public class BookClubChallengeController {
         )));
 
     }
-    /**
-     * 챌린지 인증
-     *
-     */
 
     /**
      * 유저가 참여중인 챌린지 조회

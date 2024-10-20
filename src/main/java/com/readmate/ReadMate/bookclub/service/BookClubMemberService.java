@@ -132,4 +132,78 @@ public class BookClubMemberService {
 
         return bookClubMemberResponses;
     }
+
+    /**
+     * 탈퇴하지 않고 가입 승인된 현재 북클럽 멤버 조회
+     * @param bookClubId
+     * @return List<BookClubMemberResponse>
+     */
+    public List<BookClubMemberResponse> findApprovedMembers(Long bookClubId) {
+        // 존재하지 않는 북클럽일 경우 예외 발생
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+
+        // 탈퇴하지 않은 승인된 멤버 목록 조회
+        List<BookClubMember> approvedMembers = bookClubMemberRepository.findByBookClubAndIsApproveAndDelYn(bookClub, true, "N");
+
+        // BookClubMemberResponse 형태로 변환하여 반환
+        return approvedMembers.stream()
+                .map(member -> new BookClubMemberResponse(
+                        member.getBookClubMemberId(),
+                        member.getUserId(),
+                        member.getClubMemberRole(),
+                        member.getBookClub(),
+                        member.getIsApprove(),
+                        member.getJoinMessage(),
+                        member.getDelYn()))
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * 유저가 특정 북클럽의 승인된 멤버인지 확인하는 메서드
+     * @param bookClubId
+     * @param userId
+     * @return boolean (유저가 승인된 멤버인지 여부)
+     */
+
+    public boolean isUserApprovedMember(Long bookClubId, Long userId) {
+        // 로그 추가
+        log.info("Checking if user {} is an approved member of book club {}", userId, bookClubId);
+
+        // 북클럽이 존재하는지 확인
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+
+        // 로그 추가
+        log.info("Found book club: {}", bookClub.getBookClubName());
+
+        // 유저가 해당 북클럽의 승인된 멤버인지 확인
+        boolean isApprovedMember = bookClubMemberRepository.existsByUserIdAndBookClubAndIsApproveAndDelYn(userId, bookClub, true, "N");
+
+        // 로그 추가
+        log.info("Is user approved: {}", isApprovedMember);
+
+        return isApprovedMember;
+    }
+
+    /**
+     * 특정 유저가 북클럽의 승인된 멤버인지 확인하고, 해당 멤버 객체를 반환하는 메서드
+     * @param bookClubId
+     * @param userId
+     * @return BookClubMember
+     */
+    public BookClubMember findApprovedMemberByUserId(Long bookClubId, Long userId) {
+        // 존재하지 않는 북클럽일 경우 예외 처리
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
+
+        // 유저가 해당 북클럽의 승인된 멤버인지 확인하고, 없을 경우 예외 처리
+        return bookClubMemberRepository.findByUserIdAndBookClubAndIsApproveAndDelYn(userId, bookClub, true, "N")
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_MEMBER));
+    }
+
+
+
+
 }

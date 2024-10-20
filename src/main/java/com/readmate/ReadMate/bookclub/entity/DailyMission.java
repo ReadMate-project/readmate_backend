@@ -19,7 +19,11 @@ public class DailyMission {
     private Long missionId;
 
     private LocalDate missionDate; // 미션 날짜
-    private int pagesToRead;       // 읽어야 할 페이지 수
+    @Column(name = "start_page")
+    private int startPage; // 시작 페이지
+
+    @Column(name = "end_page")
+    private int endPage; // 끝 페이지
 
     @ManyToOne
     @JoinColumn(name = "challenge_id")

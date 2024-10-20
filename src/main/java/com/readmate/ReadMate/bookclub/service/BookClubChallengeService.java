@@ -1,5 +1,6 @@
 package com.readmate.ReadMate.bookclub.service;
 
+import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.bookclub.dto.res.MissionResponse;
 import com.readmate.ReadMate.bookclub.dto.res.UserMissionResponse;
@@ -31,8 +32,16 @@ public class BookClubChallengeService {
     @Transactional
     public MissionResponse getClubChallenge(CustomUserDetails userDetails, Long bookClubId) {
 
-        //접속한 USER (UserDetail ) 가 회원이 아니면 에러 처리
-        if (!isUserMemberOfClub(userDetails, bookClubId)) {
+        BookClub bookClub = bookClubRepository.findById(bookClubId)
+                        .orElseThrow(()-> new CustomException(ErrorCode.BOOK_NOT_FOUND));
+
+        // 유저가 해당 북클럽의 승인된 멤버인지 확인
+        BookClubMember member = bookClubMemberRepository.findByUserIdAndBookClubAndIsApproveAndDelYn(
+                        userDetails.getUser().getUserId(), bookClub, true, "N")
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_MEMBER));
+
+        // 접속한 USER가 회원이 아니면 에러 처리
+        if (member==null) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
         LocalDate today = LocalDate.now();
@@ -49,36 +58,22 @@ public class BookClubChallengeService {
                 .findByChallengeAndMissionDate(currentChallenge, today);
 
         Book book = currentChallenge.getBook();
-        int progressPercentage = (int) ((double) dailyMission.getPagesToRead() / book.getTotalPages() * 100);
+        int progressPercentage = (int) ((double) dailyMission.getEndPage() / book.getTotalPages() * 100);
 
         if (dailyMission == null) {
             throw new RuntimeException("No mission found for today.");
         }
 
-
         return MissionResponse.builder()
                 .missionId(dailyMission.getMissionId())
                 .date(dailyMission.getMissionDate())
-                .todayPage(dailyMission.getPagesToRead())
+                .startPage(dailyMission.getStartPage())
+                .endPage(dailyMission.getEndPage())
                 .title(currentChallenge.getBook().getTitle())
                 .bookCover(currentChallenge.getBook().getBookCover())
                 .progressPercentage(progressPercentage)
                 .build();
 
-    }
-
-
-    private boolean isUserMemberOfClub(CustomUserDetails userDetails, Long bookClubId) {
-
-        BookClub bookClub = bookClubRepository.findById(bookClubId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
-
-
-        BookClubMember bookClubMember = bookClubMemberRepository.findByUserIdAndBookClub(userDetails.getUser().getUserId(),bookClub);
-       if(bookClubMember!=null && bookClubMember.getIsApprove()) {
-           return true;
-       }
-       return false;
     }
 
 
@@ -112,23 +107,27 @@ public class BookClubChallengeService {
 
         List<DailyMission> dailyMissions = new ArrayList<>();
 
+        int currentPage = 1; // 책의 첫 페이지부터 시작
+
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            // 나머지 페이지가 남아있는 경우
+            int endPage = currentPage + pagesPerDay - 1;
+
+            // 나머지가 있는 날은 한 페이지 더 추가
             if (remainder > 0) {
-                dailyMissions.add(DailyMission.builder()
-                        .missionDate(date)
-                        .pagesToRead(pagesPerDay + 1) // 하루에 1페이지 더 읽기
-                        .challenge(challenge)
-                        .build());
-                remainder--; // 나머지 페이지 수 줄이기
-            } else {
-                dailyMissions.add(DailyMission.builder()
-                        .missionDate(date)
-                        .pagesToRead(pagesPerDay) // 일반적인 페이지 수
-                        .challenge(challenge)
-                        .build());
+                endPage += 1;
+                remainder--;
             }
+
+            dailyMissions.add(DailyMission.builder()
+                    .missionDate(date)
+                    .startPage(currentPage)
+                    .endPage(endPage)
+                    .challenge(challenge)
+                    .build());
+
+            currentPage = endPage + 1; // 다음 시작 페이지
         }
+
 
         dailyMissionRepository.saveAll(dailyMissions);
     }
@@ -169,8 +168,8 @@ public class BookClubChallengeService {
                             .challengeId(dailyMission.getMissionId())
                             .bookClubId(dailyMission.getChallenge().getBookClub().getBookClubId())
                             .date(dailyMission.getMissionDate())
-                            .todayPage(dailyMission.getPagesToRead())
-                            // 필요에 따라 책 제목과 표지 추가
+                            .startPage(dailyMission.getStartPage())
+                            .endPage(dailyMission.getEndPage())
                             .title(dailyMission.getChallenge().getBook().getTitle())
                             .bookCover(dailyMission.getChallenge().getBook().getBookCover())
                             .build())
@@ -190,21 +189,33 @@ public class BookClubChallengeService {
     /**
      * 미션 완료 시 저장하는 메서드
      * @param dailyMissionId
-     * @param memberId
+     * @param member
      */
-    public void completeMission(Long dailyMissionId, Long memberId) {
+    public void completeMission(Long dailyMissionId, BookClubMember member, Board board) {
+        // 미션 찾기
         DailyMission dailyMission = dailyMissionRepository.findById(dailyMissionId)
                 .orElseThrow(() -> new RuntimeException("Mission not found"));
 
-        BookClubMember member = bookClubMemberRepository.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
+        // 해당 유저가 이미 이 미션을 완료했는지 확인
+        boolean alreadyCompleted = dailyMissionCompletionRepository.existsByDailyMissionAndMember(dailyMission, member);
 
+        if (alreadyCompleted) {
+            throw new CustomException(ErrorCode.MISSION_ALREADY_COMPLETED); // 적절한 에러 메시지를 추가
+        }
+
+        // DailyMission의 날짜와 게시글의 작성 날짜가 일치하는지 확인
+        if (!dailyMission.getMissionDate().equals(board.getCreatedAt().toLocalDate())) {
+            throw new CustomException(ErrorCode.MISSION_DATE_MISMATCH);  // 미션 날짜와 게시글 작성 날짜가 다를 경우 예외 처리
+        }
+
+        // 미션 완료 처리
         DailyMissionCompletion completion = DailyMissionCompletion.builder()
                 .dailyMission(dailyMission)
                 .member(member)
-                .completionDate(LocalDate.now())
+                .completionDate(LocalDate.now())  // 현재 날짜로 완료 날짜 설정
                 .build();
 
+        // 완료된 미션 저장
         dailyMissionCompletionRepository.save(completion);
     }
 

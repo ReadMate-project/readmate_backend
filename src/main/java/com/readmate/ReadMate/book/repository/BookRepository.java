@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface BookRepository extends JpaRepository<Book,Long> , JpaSpecificationExecutor<Book> {
+public interface BookRepository extends JpaRepository<Book,String> , JpaSpecificationExecutor<Book> {
     @Query("SELECT b FROM Book b WHERE b.isbn13 = :isbn13")
-    Optional<Book> findByIsbn13(@Param("isbn13") Long isbn13);
+    Optional<Book> findByIsbn13(@Param("isbn13") String isbn13);
 }
