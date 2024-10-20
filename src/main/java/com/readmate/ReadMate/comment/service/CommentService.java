@@ -8,6 +8,8 @@ import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,6 +76,10 @@ public class CommentService {
             return commentRepository.findByBoardIdOrderByCreatedAtDesc(boardId);
         }
     }
+    public Page<Comment> findCommentsByBoardIdWithPagination(Long boardId, Pageable pageable) {
+        return commentRepository.findByBoardId(boardId, pageable);
+    }
+
 
 
 
