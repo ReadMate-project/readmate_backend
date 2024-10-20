@@ -7,6 +7,8 @@ import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.bookclub.dto.res.BookClubMemberResponse;
 import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
 import com.readmate.ReadMate.comment.dto.CommentRequest;
+import com.readmate.ReadMate.comment.dto.CommentResWithPageInfo;
+import com.readmate.ReadMate.comment.dto.PageInfo;
 import com.readmate.ReadMate.comment.entity.Comment;
 import com.readmate.ReadMate.comment.service.CommentService;
 import com.readmate.ReadMate.common.exception.CustomException;
@@ -17,6 +19,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -126,23 +132,36 @@ public class CommentController {
     //4. 댓글 최신순 or 등록순으로 정렬
     @GetMapping("/{boardId}/comments")
     @Operation(summary = "댓글 목록 조회", description = "댓글 목록을 조회할 때 정렬 기준을 선택할 수 있습니다.")
-    public ResponseEntity<BasicResponse<List<Comment>>> getComments(
+    public ResponseEntity<BasicResponse<CommentResWithPageInfo>> getComments(
             @PathVariable("boardId") Long boardId,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size,
             @RequestParam(value = "sort", required = false, defaultValue = "latest") String sort) // 정렬 디폴트가 최신순
     {
 
-        // 해당 게시판이 존재하는지 확인
         Board board = boardService.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOARD));
 
-        // 댓글 목록 조회
-        List<Comment> comments = commentService.findCommentsByBoardId(boardId, sort);
+        Pageable pageable;
+        if (sort.equals("latest")) {
+            pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());  // 최신순
+        } else {
+            pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());  // 등록순
+        }
 
-        // 응답 객체 생성
-        BasicResponse<List<Comment>> response = BasicResponse.ofSuccess(comments);
+        Page<Comment> commentPage = commentService.findCommentsByBoardIdWithPagination(boardId, pageable);
+
+        PageInfo pageInfo = new PageInfo(
+                commentPage.getNumber(),
+                commentPage.getSize(),
+                (int) commentPage.getTotalElements(),
+                commentPage.getTotalPages()
+        );
+
+
+        CommentResWithPageInfo responseBody = new CommentResWithPageInfo(commentPage.getContent(), pageInfo);
+        BasicResponse<CommentResWithPageInfo> response = BasicResponse.ofSuccess(responseBody);
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
-
 }
