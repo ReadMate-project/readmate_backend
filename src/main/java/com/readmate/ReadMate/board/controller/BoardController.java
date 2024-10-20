@@ -7,6 +7,7 @@ import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.bookclub.dto.res.BookClubMemberResponse;
+import com.readmate.ReadMate.bookclub.entity.BookClubMember;
 import com.readmate.ReadMate.bookclub.entity.BookClubMemberRole;
 import com.readmate.ReadMate.bookclub.service.BookClubChallengeService;
 import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
@@ -56,6 +57,7 @@ public class BoardController {
 
         // 게시판에 따른 권한 체크
         BoardType boardType = boardRequest.getBoardType();
+        BookClubMember member = null;
 
         switch (boardType) {
             case BOARD:
@@ -73,7 +75,7 @@ public class BoardController {
                 if (boardRequest.getBookclubId() != null) {
                     try {
                         // 북클럽 멤버 여부 확인
-                        bookClubMemberService.findMember(boardRequest.getBookclubId(), userDetails);
+                        member = bookClubMemberService.findApprovedMemberByUserId(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
                     } catch (CustomException e) {
                         throw new CustomException(ErrorCode.FORBIDDEN);
                     }
@@ -83,6 +85,8 @@ public class BoardController {
             case CLUB_BOARD:
                 try {
                     // 북클럽 멤버 여부 확인
+                    System.out.println("User ID: "+userDetails.getUser().getUserId()+ "BookClub ID:"+ boardRequest.getBookclubId());
+
                     bookClubMemberService.findMember(boardRequest.getBookclubId(), userDetails);
                     boardRequest.setBookId(null);
                 } catch (CustomException e) {
@@ -105,7 +109,7 @@ public class BoardController {
 
         Board board = new Board();
         board.setUserId(userDetails.getUser().getUserId());
-        board.setBookId(boardRequest.getBookId());
+        board.setBookId(boardRequest.getBookId().toString());
         board.setBookclubId(boardRequest.getBookclubId());
         board.setContent(boardRequest.getContent());
         board.setCreatedAt(LocalDateTime.now());
@@ -113,14 +117,14 @@ public class BoardController {
         board.setBoardType(boardType);
 
 
-        // 게시물 저장
-        Board savedBoard = boardService.saveBoard(board);
-
         // 챌린지 인증 미션 완료 처리 (bookclubId가 있는 경우)
         if (boardType == BoardType.FEED && boardRequest.getBookclubId() != null) {
             Long dailyMissionId = boardRequest.getDailyMissionId();
-            bookClubChallengeService.completeMission(dailyMissionId, userDetails.getUser().getUserId());
+            bookClubChallengeService.completeMission(dailyMissionId, member, board);
         }
+
+        // 게시물 저장
+        Board savedBoard = boardService.saveBoard(userDetails, board);
 
         BasicResponse<Board> response = BasicResponse.ofCreateSuccess(savedBoard);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -153,7 +157,7 @@ public class BoardController {
             }
 
             if (updateRequest.getBookId() != null) {
-                board.setBookId(updateRequest.getBookId());
+                board.setBookId(updateRequest.getBookId().toString());
             }
             if (updateRequest.getBookclubId() != null) {
                 board.setBookclubId(updateRequest.getBookclubId());
@@ -166,7 +170,7 @@ public class BoardController {
             }
             board.setCreatedAt(LocalDateTime.now());
 
-            Board updatedBoard = boardService.saveBoard(board);
+            Board updatedBoard = boardService.saveBoard(userDetails,board);
             BasicResponse<Board> response = BasicResponse.ofSuccess(updatedBoard);
 
             return new ResponseEntity<>(response, HttpStatus.OK);

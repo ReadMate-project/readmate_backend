@@ -6,21 +6,15 @@ import com.readmate.ReadMate.book.dto.res.AladinBookResponse;
 import com.readmate.ReadMate.book.dto.res.BookResponse;
 import com.readmate.ReadMate.book.dto.res.SubInfo;
 import com.readmate.ReadMate.book.entity.Book;
-import com.readmate.ReadMate.book.entity.BookCategory;
 import com.readmate.ReadMate.book.repository.BookRepository;
-import com.readmate.ReadMate.bookclub.entity.BookClub;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
-import com.readmate.ReadMate.common.genre.Genre;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.w3c.dom.Text;
-
-import java.util.List;
 
 @Service
 @Slf4j
@@ -39,7 +33,7 @@ public class BookService {
     public String saveBook(BookRequest bookRequest){
         Book book = Book.builder()
                 .description(bookRequest.getDescription())
-//                .genre(bookRequest.getGenre())
+                .genre(bookRequest.getGenre())
                 .isbn13(bookRequest.getIsbn13())
                 .publisher(bookRequest.getPublisher())
                 .title(bookRequest.getTitle())
@@ -54,15 +48,19 @@ public class BookService {
     /**
      * ISBN13 으로 책 저장하기
      * @param isbn13
-     * @return String
+     * @return Book
      */
-    public Book saveBookByIsbn(Long isbn13) {
+    public Book saveBookByIsbn(String isbn13) {
+
+        //  1. 데이터 베이스에서 책 조회
         Book existingBook = bookRepository.findByIsbn13(isbn13).orElse(null);
 
         if (existingBook != null) {
             // 책이 이미 존재하면 그 책을 반환
             return existingBook;
         }
+
+        // 2. 책이 없으면 Aladin API 호출
         String url = String.format("%s&ItemId=%s", aladinUrl, isbn13);
 
         ResponseEntity<AladinBookResponse> response = restTemplate.getForEntity(url, AladinBookResponse.class);
@@ -86,25 +84,26 @@ public class BookService {
             String title = bookInfo.getTitle();
             String author = bookInfo.getAuthor();
             String description = bookInfo.getDescription();
-            String isbn = bookInfo.getIsbn();
             String isbn13Str = bookInfo.getIsbn13();
             String publisher = bookInfo.getPublisher();
             String coverUrl = bookInfo.getCover();
             String categoryName = bookInfo.getCategoryName();
 
+            // categoryName에서 마지막 단어로 장르 추출
             String[] categories = categoryName.split(">");
-            String genreName = categories.length > 1 ? categories[1] : null;
-
+//            String genreName = categories.length > 0 ? categories[categories.length - 1].trim() : null; // 마지막 항목
+            String genreName = categories.length > 2 ? categories[2] : null;
 
             // 필요한 로직 수행 후 저장
             Book book = Book.builder()
                     .title(title)
                     .author(author)
                     .description(description)
-                    .isbn13(isbn)
+                    .isbn13(isbn13Str)
                     .publisher(publisher)
                     .totalPages(totalPages)
                     .bookCover(coverUrl)
+                    .genre(genreName)  // 장르 설정
                     .build();
 
             bookRepository.save(book);
@@ -119,69 +118,21 @@ public class BookService {
     //조회하는 로직
 
     /**
-     * DB에 저장된 Book ID로 조회하기
-     */
-    public BookResponse getBookById(Long bookId) {
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
-        return BookResponse.builder()
-                .bookId(book.getBookId())
-                .description(book.getDescription())
-//                .genre(book.getGenre())
-                .isbn13(book.getIsbn13())
-                .publisher(book.getPublisher())
-                .totalPages(book.getTotalPages())
-                .title(book.getTitle())
-                .bookCover(book.getBookCover())
-                .author(book.getAuthor())
-                .build();
-
-
-    }
-    /**
      * Book ISBN13으로 조회하기
      */
-    public BookResponse getBookByIsbn(Long isbn13) {
+    public BookResponse getBookByIsbn(String isbn13) {
         Book book = bookRepository.findByIsbn13(isbn13)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
 
         return BookResponse.builder()
-                .bookId(book.getBookId())
-                .description(book.getDescription())
-//                .genre(book.getGenre())
                 .isbn13(book.getIsbn13())
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .description(book.getDescription())
                 .publisher(book.getPublisher())
                 .totalPages(book.getTotalPages())
-                .title(book.getTitle())
                 .bookCover(book.getBookCover())
-                .author(book.getAuthor())
+                .genre(book.getGenre())  // 장르 반환
                 .build();
     }
-
-
-    public Long getItemPage(Long isbn13){
-        String url = String.format("%s&ItemId=%s", aladinUrl, isbn13);
-
-        ResponseEntity<AladinBookResponse> response = restTemplate.getForEntity(url, AladinBookResponse.class);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            AladinBookResponse bookResponse = response.getBody();
-
-            if (bookResponse == null || bookResponse.getItem() == null || bookResponse.getItem().isEmpty()) {
-                log.error("Book not found or empty response for ISBN: {}", isbn13);
-                throw new CustomException(ErrorCode.BOOK_NOT_FOUND);
-            }
-
-            AladinBook bookInfo = bookResponse.getItem().get(0);
-            SubInfo subInfo = bookInfo.getSubInfo();
-            Long totalPages = (subInfo != null) ? subInfo.getItemPage() : null;
-
-           return totalPages;
-        } else {
-            log.error("Failed to retrieve book from Aladin API: {}", response.getStatusCode());
-            throw new CustomException(ErrorCode.API_CALL_FAILED);
-        }
-    }
-
-
-    }
-
+}

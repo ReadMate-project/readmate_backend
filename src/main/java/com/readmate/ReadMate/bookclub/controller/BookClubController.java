@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,6 +63,12 @@ public class BookClubController {
 
 //        return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubService.getBookClub(bookClubId)));
 
+    }
+
+    @GetMapping("/user")
+    @Operation(summary = "유저가 참여하고 있는 북클럽 조회", description = "유저가 참여하고 있는 진행중인 북클럽을 조회합니다.")
+    public ResponseEntity<?> getUserBookClub(@AuthenticationPrincipal CustomUserDetails userDetails){
+        return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubService.getUserBookClub(userDetails)));
     }
 
     //북클럽이름 중복 확인

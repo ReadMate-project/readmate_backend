@@ -19,7 +19,8 @@ import java.util.List;
 public class MissionResponse {
     private Long missionId;
     private LocalDate date;
-    private int todayPage;
+    private int startPage; // 시작 페이지
+    private int endPage;
     private String title;
     private String bookCover;
 

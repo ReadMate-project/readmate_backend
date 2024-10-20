@@ -17,7 +17,7 @@ public class BookRequest {
     private String bookCover;
     //아래 제거 여부 나중에 논의 예정
     private String author;
-    // private Genre genre;
+     private String genre;
     private String description;
     private String publisher;
 

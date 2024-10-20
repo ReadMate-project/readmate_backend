@@ -28,7 +28,7 @@ public class Board {
     private BoardType boardType;
 
     @Column(name = "book_id")
-    private Long bookId;
+    private String bookId;
 
     @Column(name = "bookclub_id") //CLUB_BOARD 때문에
     private Long bookclubId;

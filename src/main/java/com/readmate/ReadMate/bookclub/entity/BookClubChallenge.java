@@ -36,8 +36,9 @@ public class BookClubChallenge {
     private LocalDate endDate;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id")
+    // Book 엔티티의 isbn13을 참조하도록 변경
+    @ManyToOne
+    @JoinColumn(name = "isbn13", referencedColumnName = "isbn13", nullable = false)
     private Book book;
 
     private int progressPercentage;

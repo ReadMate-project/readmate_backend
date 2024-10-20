@@ -11,7 +11,7 @@ import org.w3c.dom.Text;
 @Setter
 public class BookResponse {
 
-    private Long bookId;
+    private String isbn13;
 
     private String title;
 
@@ -19,12 +19,10 @@ public class BookResponse {
 
     private Long totalPages;
 
-//    private Genre genre;
+    private String genre;
     private String description;
 
     private String publisher;
-
-    private String isbn13;
 
     private String bookCover;
 }

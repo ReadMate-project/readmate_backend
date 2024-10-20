@@ -90,8 +90,9 @@
 
             //책 ISBN13 받아서 Book에 저장
             List<Book> bookClubBooks = clubRequest.getBookList().stream()
-                    .map(bookInfo -> bookService.saveBookByIsbn(bookInfo.getIsbn())) // ISBN으로 책 저장
+                    .map(bookInfo -> bookService.saveBookByIsbn(bookInfo.getIsbn().toString())) // ISBN으로 책 저장
                     .collect(Collectors.toList());
+
 
             // 책 저장 후, 각각의 책에 대해 챌린지 생성
             for (int i = 0; i < bookClubBooks.size(); i++) {
@@ -218,7 +219,7 @@
 
             // 책 ISBN13로 책 저장
             List<Book> bookClubBooks = clubRequest.getBookList().stream()
-                    .map(bookInfo -> bookService.saveBookByIsbn(bookInfo.getIsbn()))
+                    .map(bookInfo -> bookService.saveBookByIsbn(bookInfo.getIsbn().toString()))
                     .collect(Collectors.toList());
 
             // 기존 챌린지 삭제 처리
@@ -317,13 +318,6 @@
 
         }
 
-
-
-        /**
-         * 북클럽 개별 조회
-         * @param clubId
-         * @return
-         */
         public BookClubResponse getBookClub(Long clubId) {
             BookClub bookClub = bookClubRepository.findById(clubId)
                     .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
@@ -335,6 +329,29 @@
             bookClubResponse.createBookClubResponse(bookClub, challengeResponses);
             return bookClubResponse;
         }
+
+        // 유저가 가입한 북클럽 목록 조회
+        public List<BookClubListResponse> getUserBookClub(CustomUserDetails userDetails) {
+            Long userId = userDetails.getUser().getUserId();
+
+            // 유저가 참여한 북클럽 목록 조회
+            List<BookClub> userBookClubs = bookClubMemberRepository.findAllBookClubsByUserId(userId);
+
+            // 북클럽 정보를 리스트로 변환하여 반환
+            return userBookClubs.stream()
+                    .map(bookClub -> BookClubListResponse.builder()
+                            .bookClubID(bookClub.getBookClubId())
+                            .bookClubName(bookClub.getBookClubName())
+                            .description(bookClub.getDescription())
+                            .startDate(bookClub.getStartDate())
+                            .endDate(bookClub.getEndDate())
+                            .recruitmentStartDate(bookClub.getRecruitmentStartDate())
+                            .recruitmentEndDate(bookClub.getRecruitmentEndDate())
+                            .bookCover(getCurrentChallenge(LocalDate.now(), bookClub.getBookClubId()).getBook().getBookCover())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
 
         public List<BookClubChallengeResponse> getChallengeResponses(List<BookClubChallenge> challenges) {
             return challenges.stream()

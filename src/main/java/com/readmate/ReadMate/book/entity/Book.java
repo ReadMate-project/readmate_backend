@@ -1,9 +1,7 @@
 package com.readmate.ReadMate.book.entity;
 
-import com.readmate.ReadMate.common.genre.Genre;
 import jakarta.persistence.*;
 import lombok.*;
-import org.w3c.dom.Text;
 
 @Entity
 @Builder
@@ -13,31 +11,33 @@ import org.w3c.dom.Text;
 @AllArgsConstructor
 public class Book {
 
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "book_id")
-    private Long bookId;
+    @Column(name = "isbn13")
+    private String isbn13;  // ISBN13을 기본 키로 설정
+
     @Column(name = "book_title")
     private String title;
+
     @Column(name = "book_author")
     private String author;
+
     @Column(name = "total_pages")
     private Long totalPages;
 
-//    @Column(name = "genre")
-//    private Genre genre;
-@Column(name = "description", columnDefinition = "TEXT") // Explicitly set as TEXT
-private String description;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
     @Column(name = "publisher")
     private String publisher;
-    @Column(name = "isbn13")
-    private String isbn13;
+
     @Column(name = "book_cover")
     private String bookCover;
 
+    @Column(name = "genre")
+    private String genre;  // 장르 필드 추가
 
     @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
     @Builder.Default
     private String delYn = "N";
+
 }

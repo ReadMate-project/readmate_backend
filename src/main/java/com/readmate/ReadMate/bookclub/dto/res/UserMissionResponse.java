@@ -15,7 +15,8 @@ public class UserMissionResponse {
     private Long bookClubId;
     private Long challengeId;
     private LocalDate date;
-    private int todayPage;
+    private int startPage;
+    private int endPage;
     private String title;
     private String bookCover;
 
