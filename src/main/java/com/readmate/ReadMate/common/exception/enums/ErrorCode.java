@@ -34,6 +34,9 @@ public enum ErrorCode {
     UPDATE_NOTICE_FAILED(400, "BOARD003", "공지사항 수정에 실패했습니다."),
     DELETE_NOTICE_FAILED(400, "BOARD004", "공지사항 삭제에 실패했습니다."),
 
+    // FEED
+    NO_FEEDS_FOUND(404, "FEED001", "해당 날짜에 피드가 존재하지 않습니다."),
+
     // BOOKCLUB
     INVALID_CLUB(404, "CLUB001", "존재하지 않는 클럽입니다."),
     INVALID_GENRE_FORMAT(501, "CLUB002", "변환에 실패 했습니다."),
