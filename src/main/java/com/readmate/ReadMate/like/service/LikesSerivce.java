@@ -63,4 +63,8 @@ public class LikesSerivce {
         }
     }
 
+    public int countLikesByBoardId(Long boardId) {
+        return likesRepository.countByBoardId(boardId);
+    }
+
 }

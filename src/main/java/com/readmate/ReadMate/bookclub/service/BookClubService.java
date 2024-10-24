@@ -1,6 +1,8 @@
     package com.readmate.ReadMate.bookclub.service;
 
 
+    import com.readmate.ReadMate.board.entity.Board;
+    import com.readmate.ReadMate.board.repository.BoardRepository;
     import com.readmate.ReadMate.book.entity.Book;
     import com.readmate.ReadMate.book.repository.BookRepository;
     import com.readmate.ReadMate.book.service.BookService;
@@ -46,6 +48,7 @@
         private final BookService bookService;
         private final DailyMissionRepository dailyMissionRepository;
         private final BookClubChallengeRepository bookClubChallengeRepository;
+        private final BoardRepository boardRepository;
 
         /**
          * 북클럽 생성 로직
@@ -420,8 +423,6 @@
         public List<BookClub> getBookClubsOrderedByViewCount() {
             return bookClubRepository.findAll(Sort.by(Sort.Direction.DESC, "viewCount"));
         }
-
-            
 
 
 
