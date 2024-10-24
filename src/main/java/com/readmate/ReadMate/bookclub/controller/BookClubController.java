@@ -1,9 +1,11 @@
 package com.readmate.ReadMate.bookclub.controller;
 
+import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.bookclub.dto.req.BookClubRequest;
 
 import com.readmate.ReadMate.bookclub.dto.res.BookClubListResponse;
 import com.readmate.ReadMate.bookclub.dto.res.BookClubResponse;
+import com.readmate.ReadMate.board.dto.MVPResponse;
 import com.readmate.ReadMate.bookclub.entity.BookClub;
 import com.readmate.ReadMate.bookclub.service.BookClubService;
 import com.readmate.ReadMate.common.message.BasicResponse;
@@ -13,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class BookClubController {
 
 
     private final BookClubService bookClubService;
+    private final BoardService boardService;
 
     @PostMapping
     @Operation(summary = "북클럽 생성하기", description = "새로운 북클럽을 생성합니다")
@@ -101,4 +103,14 @@ public class BookClubController {
 
         return ResponseEntity.ok(responseList);
     }
+
+    @GetMapping("/mvp")
+    public ResponseEntity<BasicResponse<List<MVPResponse>>> getMVP(
+            @RequestParam Long bookClubId) {
+
+        List<MVPResponse> mvpResponses = boardService.getMVPResponse(bookClubId);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess(mvpResponses));
+    }
+
 }

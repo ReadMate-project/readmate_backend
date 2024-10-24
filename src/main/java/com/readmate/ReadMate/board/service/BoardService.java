@@ -3,6 +3,7 @@ package com.readmate.ReadMate.board.service;
 import com.readmate.ReadMate.board.dto.BoardRequest;
 import com.readmate.ReadMate.board.dto.CalendarBookResponse;
 import com.readmate.ReadMate.board.dto.FeedResponse;
+import com.readmate.ReadMate.board.dto.MVPResponse;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.repository.BoardRepository;
@@ -12,8 +13,10 @@ import com.readmate.ReadMate.book.repository.BookRepository;
 import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.book.service.MyBookService;
 import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.comment.repository.CommentRepository;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
+import com.readmate.ReadMate.like.repository.LikesRepository;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
@@ -42,7 +45,8 @@ public class BoardService {
     private final CustomUserDetailsService userDetailsService;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
-
+    private final LikesRepository likesRepository;
+    private final CommentRepository commentRepository;
     //0.게시판 작성
     public Board saveBoard(CustomUserDetails user,Board board) {
         // 내 서재에 책 추가
@@ -139,13 +143,12 @@ public class BoardService {
             User user = userRepository.findByUserId(board.getUserId())
                     .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
-            BookResponse book = bookService.getBookByIsbn(board.getBookId());
-
             // BookResponse 생성 (ISBN 기반)
             BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
 
             // FeedResponse 반환
             return new FeedResponse(
+                    board.getBoardId(),
                     board.getTitle(),
                     board.getContent(),
                     board.getCreatedAt().toString(),
@@ -155,5 +158,48 @@ public class BoardService {
                     bookResponse
             );
         }).collect(Collectors.toList());
+    }
+
+    public List<MVPResponse> getMVPResponse(Long bookClubId) {
+
+        // 1. 해당 북클럽에 속한 피드(에세이) 조회
+        List<Board> boards = boardRepository.findByBookclubIdAndBoardType(bookClubId, BoardType.FEED);
+
+        // 2. 각 피드(에세이)에 대해 좋아요, 댓글, 미션 참여 횟수 기준으로 정렬
+        List<MVPResponse> mvpResponses = boards.stream().map(board -> {
+
+                    // 3. 좋아요와 댓글 수 조회
+                    int likeCount = likesRepository.countByBoardId(board.getBoardId());
+                    int commentCount = commentRepository.countByBoardId(board.getBoardId());
+
+                    // 4. 게시글 작성자의 유저 정보 가져오기
+                    User user = userRepository.findById(board.getUserId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
+
+                    // 5. MVPResponse 객체 생성
+                    return new MVPResponse(
+                            board.getBoardId(),
+                            board.getBookId(),
+                            board.getTitle(),
+                            board.getContent(),
+                            user.getUserId(),
+                            user.getNickname(),
+                            user.getProfileImageUrl()
+
+                    );
+                })
+                // 6. 좋아요, 댓글 수 기준으로 내림차순 정렬
+                .sorted((mvp1, mvp2) -> {
+                    int result = Integer.compare(likesRepository.countByBoardId(mvp2.getBoardId()),
+                            likesRepository.countByBoardId(mvp1.getBoardId()));
+                    if (result == 0) {
+                        result = Integer.compare(commentRepository.countByBoardId(mvp2.getBoardId()),
+                                commentRepository.countByBoardId(mvp1.getBoardId()));
+                    }
+                    return result;
+                })
+                .collect(Collectors.toList());
+
+        return mvpResponses;
     }
 }
