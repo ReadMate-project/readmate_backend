@@ -46,7 +46,7 @@ jobs:
         id: deploy
         run: |
           aws deploy create-deployment \
-            --application-name <your-application-name> \
-            --deployment-group-name <your-deployment-group-name> \
+            --application-name readmate-deploy \
+            --deployment-group-name readmate-deploy-release \
             --deployment-config-name CodeDeployDefault.OneAtATime \
             --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
