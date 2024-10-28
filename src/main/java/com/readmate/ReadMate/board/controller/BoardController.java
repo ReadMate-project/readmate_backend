@@ -169,7 +169,6 @@ public class BoardController {
             if (updateRequest.getTitle() != null) {
                 board.setTitle(updateRequest.getTitle());
             }
-            board.setCreatedAt(LocalDateTime.now());
 
             Board updatedBoard = boardService.saveBoard(userDetails,board);
             BasicResponse<Board> response = BasicResponse.ofSuccess(updatedBoard);
@@ -311,26 +310,19 @@ public class BoardController {
     }
 
 
-
-
-
     //5. 게시판 상세 조회
     @GetMapping("/{boardId}")
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세 조회 API")
     public ResponseEntity<?> getBoardDetails(@PathVariable("boardId") Long boardId,
                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // 게시글 조회
         Board board = boardService.getBoardById(boardId);
 
-        // 게시글이 존재하지 않는 경우
         if (board == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 게시물은 존재하지 않습니다.");
         }
 
-        // 게시판 타입이 CLUB_BOARD인 경우
         if (board.getBoardType() == BoardType.CLUB_BOARD) {
-            // 인증된 유저인지 확인
             if (userDetails == null || userDetails.getUser() == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
