@@ -36,3 +36,15 @@ jobs:
           
           # 빌드 결과물 전송
           scp -o StrictHostKeyChecking=no -i $GITHUB_WORKSPACE/mykey.pem build/libs/*.jar ubuntu@$EC2_HOST:/home/ubuntu/app/step1/
+
+      - name: Deploy to EC2
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          # SSH 키 파일 설정
+          echo "$EC2_SSH_KEY" > $GITHUB_WORKSPACE/mykey.pem
+          chmod 400 $GITHUB_WORKSPACE/mykey.pem
+
+          # SSH를 통해 배포 스크립트 실행
+          ssh -o StrictHostKeyChecking=no -i $GITHUB_WORKSPACE/mykey.pem ubuntu@$EC2_HOST "cd /home/ubuntu/app/step1 && ./deploy.sh"
