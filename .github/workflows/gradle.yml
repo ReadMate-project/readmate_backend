@@ -31,7 +31,7 @@ jobs:
           # SSH 키 파일 생성 (<<EOF 사용)
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/my-readMate-key.pem
-          chmod 400 ~/.ssh/my-readMate-key.pem
+          chmod 600 ~/.ssh/my-readMate-key.pem
           
           # 빌드 결과물 전송
           scp -o StrictHostKeyChecking=no -i ~/.ssh/my-readMate-key.pem build/libs/*.jar ubuntu@$EC2_HOST:/home/ubuntu/app/step1/
@@ -44,7 +44,7 @@ jobs:
           # SSH 키 파일 설정
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/my-readMate-key.pem
-          chmod 400 ~/.ssh/my-readMate-key.pem
+          chmod 600 ~/.ssh/my-readMate-key.pem
 
           # SSH를 통해 배포 스크립트 실행
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/my-readMate-key.pem ubuntu@$EC2_HOST "cd /home/ubuntu/app/step1 && ./deploy.sh"
