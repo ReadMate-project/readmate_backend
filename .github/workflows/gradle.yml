@@ -1,4 +1,4 @@
-name: Java CI with Gradle
+name: Java CI/CD with Gradle
 
 on:
   push:
@@ -29,11 +29,11 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           # SSH 키 파일 생성 및 권한 설정
-          echo "$EC2_SSH_KEY" > $HOME/mykey.pem
-          chmod 400 $HOME/mykey.pem
+          echo "$EC2_SSH_KEY" > /tmp/mykey.pem
+          chmod 400 /tmp/mykey.pem
 
           # 빌드 결과물 전송
-          scp -o StrictHostKeyChecking=no -i $HOME/mykey.pem build/libs/*.jar ubuntu@$EC2_HOST:/home/ubuntu/app/step1/
+          scp -o StrictHostKeyChecking=no -i /tmp/mykey.pem build/libs/*.jar ubuntu@$EC2_HOST:/home/ubuntu/app/step1/
 
       - name: Deploy to EC2
         env:
@@ -41,8 +41,8 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           # SSH 키 파일 설정
-          echo "$EC2_SSH_KEY" > $HOME/mykey.pem
-          chmod 400 $HOME/mykey.pem
+          echo "$EC2_SSH_KEY" > /tmp/mykey.pem
+          chmod 400 /tmp/mykey.pem
 
           # SSH를 통해 배포 스크립트 실행
-          ssh -o StrictHostKeyChecking=no -i $HOME/mykey.pem ubuntu@$EC2_HOST "cd /home/ubuntu/app/step1 && ./deploy.sh"
+          ssh -o StrictHostKeyChecking=no -i /tmp/mykey.pem ubuntu@$EC2_HOST "cd /home/ubuntu/app/step1 && ./deploy.sh"
