@@ -18,7 +18,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4 # Gradle 환경 설정
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle Wrapper (without tests)
         run: ./gradlew build -x test
@@ -29,13 +29,13 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           # SSH 키 파일 생성 및 경로 출력
-          echo "$EC2_SSH_KEY" > $HOME/mykey.pem
-          chmod 400 $HOME/mykey.pem
-          echo "SSH key file path: $HOME/mykey.pem"
-          ls -al $HOME/mykey.pem
+          echo "$EC2_SSH_KEY" > $HOME/my-readMate-key.pem
+          chmod 400 $HOME/my-readMate-key.pem
+          echo "SSH key file path: $HOME/my-readMate-key.pem"
+          ls -al $HOME/my-readMate-key.pem
           
           # 빌드 결과물 전송
-          scp -o StrictHostKeyChecking=no -i $HOME/mykey.pem build/libs/*.jar ubuntu@$EC2_HOST:/home/ubuntu/app/step1/
+          scp -o StrictHostKeyChecking=no -i $HOME/my-readMate-key.pem build/libs/*.jar ubuntu@$EC2_HOST:/home/ubuntu/app/step1/
 
       - name: Deploy to EC2
         env:
@@ -43,8 +43,8 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           # SSH 키 파일 설정
-          echo "$EC2_SSH_KEY" > $HOME/mykey.pem
-          chmod 400 $HOME/mykey.pem
+          echo "$EC2_SSH_KEY" > $HOME/my-readMate-key.pem
+          chmod 400 $HOME/my-readMate-key.pem
 
           # SSH를 통해 배포 스크립트 실행
-          ssh -o StrictHostKeyChecking=no -i $HOME/mykey.pem ubuntu@$EC2_HOST "cd /home/ubuntu/app/step1 && ./deploy.sh"
+          ssh -o StrictHostKeyChecking=no -i $HOME/my-readMate-key.pem ubuntu@$EC2_HOST "cd /home/ubuntu/app/step1 && ./deploy.sh"
