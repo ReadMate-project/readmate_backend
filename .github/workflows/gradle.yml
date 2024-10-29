@@ -33,7 +33,7 @@ jobs:
           chmod 600 /tmp/mykey.pem
 
           # 빌드 결과물 전송
-          scp -o StrictHostKeyChecking=no -i /tmp/mykey.pem build/libs/*.jar ec2-user@$EC2_HOST:/home/ec2-user/app/step1/
+          scp -o StrictHostKeyChecking=no -i /tmp/mykey.pem build/libs/*.jar ubuntu@$EC2_HOST:/home/ubuntu/app/step1/
 
       - name: Deploy to EC2
         env:
