@@ -24,7 +24,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build with Gradle Wrapper (without tests)
+      - name: Build with Gradle Wrapper (without test)
         run: ./gradlew build -x test
 
       - name: Upload Build Artifact to EC2
