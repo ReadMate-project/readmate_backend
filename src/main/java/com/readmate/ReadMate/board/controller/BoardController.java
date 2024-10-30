@@ -1,8 +1,6 @@
 package com.readmate.ReadMate.board.controller;
 
-import com.readmate.ReadMate.board.dto.BoardRequest;
-import com.readmate.ReadMate.board.dto.BoardUpdateRequest;
-import com.readmate.ReadMate.board.dto.PageInfo;
+import com.readmate.ReadMate.board.dto.*;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.service.BoardService;
@@ -27,7 +25,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -168,7 +169,6 @@ public class BoardController {
             if (updateRequest.getTitle() != null) {
                 board.setTitle(updateRequest.getTitle());
             }
-            board.setCreatedAt(LocalDateTime.now());
 
             Board updatedBoard = boardService.saveBoard(userDetails,board);
             BasicResponse<Board> response = BasicResponse.ofSuccess(updatedBoard);
@@ -310,26 +310,19 @@ public class BoardController {
     }
 
 
-
-
-
     //5. 게시판 상세 조회
     @GetMapping("/{boardId}")
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세 조회 API")
     public ResponseEntity<?> getBoardDetails(@PathVariable("boardId") Long boardId,
                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // 게시글 조회
         Board board = boardService.getBoardById(boardId);
 
-        // 게시글이 존재하지 않는 경우
         if (board == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 게시물은 존재하지 않습니다.");
         }
 
-        // 게시판 타입이 CLUB_BOARD인 경우
         if (board.getBoardType() == BoardType.CLUB_BOARD) {
-            // 인증된 유저인지 확인
             if (userDetails == null || userDetails.getUser() == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
@@ -347,6 +340,48 @@ public class BoardController {
 
         return ResponseEntity.ok(board);
     }
+
+    // 날짜 범위 내에서 작성된 피드에 해당하는 책 정보를 반환
+    @GetMapping("/calendar/books")
+    @Operation(summary = "캘린더에 표시할 책 정보 조회", description = "특정 날짜 범위 내에서 작성된 피드에 해당하는 책 정보를 반환합니다.")
+    public ResponseEntity<BasicResponse<List<CalendarBookResponse>>> getBooksForCalendar(
+            @RequestParam("year") int year,
+            @RequestParam("month") int month) {
+
+        // 날짜 범위에 해당하는 책 정보를 가져옴
+        List<CalendarBookResponse> books = boardService.getBooksByMonth(year, month);
+
+        BasicResponse<List<CalendarBookResponse>> response = BasicResponse.ofSuccess(books);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/feeds/{date}")
+    @Operation(summary = "날짜별 피드 조회", description = "선택한 날짜에 작성된 피드 목록 조회 API")
+    public ResponseEntity<BasicResponse<List<FeedResponse>>> getFeedsByDate(
+            @PathVariable String date,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // 날짜 형식 체크
+        LocalDateTime selectedDate;
+        try {
+            selectedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+        } catch (DateTimeParseException e) {
+            throw new CustomException(ErrorCode.INVALID_BOOK_DATE);
+        }
+
+        // 해당 날짜의 피드 목록 조회
+        List<FeedResponse> feedResponses = boardService.getFeedsByDate(selectedDate);
+
+        // 피드가 없는 경우
+        if (feedResponses.isEmpty()) {
+            throw new CustomException(ErrorCode.NO_FEEDS_FOUND);
+        }
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess(feedResponses));
+    }
+
+
+
 
     // 북클럽 리더인지 확인하는 메서드 -> 공지사항땜에 필요
     private void validateLeader(Long bookclubId, CustomUserDetails userDetails) {
