@@ -136,7 +136,7 @@ public class UserService {
         if (optionalUser.isPresent()) {
 
             User user = optionalUser.get();
-            Long kakaoId = user.getKakaoId(); 
+            Long kakaoId = user.getKakaoId();
 
             String url = "https://kapi.kakao.com/v1/user/unlink";
 
