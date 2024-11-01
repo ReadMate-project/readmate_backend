@@ -19,8 +19,9 @@ public interface BookClubChallengeRepository extends JpaRepository<BookClubChall
     @Query("SELECT c FROM BookClubChallenge c WHERE c.bookClub.bookClubId = :bookClubId AND :date BETWEEN c.startDate AND c.endDate AND c.delYn = 'N'")
     BookClubChallenge findCurrentChallengeByBookClubIdAndDate(@Param("bookClubId") Long bookClubId, @Param("date") LocalDate date);
 
-
     List<BookClubChallenge>  findAllByBookClub(BookClub bookClub);
 
     List<BookClubChallenge> findAllByDelYnAndBookClub(String delYn, BookClub bookClub);
+
+    List<BookClubChallenge> findAllByDelYn(String delYn);
 }
