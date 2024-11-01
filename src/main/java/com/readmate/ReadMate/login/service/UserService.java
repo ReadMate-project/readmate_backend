@@ -136,7 +136,7 @@ public class UserService {
         if (optionalUser.isPresent()) {
 
             User user = optionalUser.get();
-            Long kakaoId = user.getKakaoId(); // 카카오 ID 가져오기
+            Long kakaoId = user.getKakaoId(); 
 
             String url = "https://kapi.kakao.com/v1/user/unlink";
 
@@ -156,7 +156,7 @@ public class UserService {
 
                 //외래키로 엮여있기에 자식키 -> 부모키 순으로 삭제 되도록
                 refreshTokenRepository.deleteById(userId);
-                userRepository.deleteById(userId); // userId로 삭제
+                userRepository.deleteById(userId);
 
             } else {
                 throw new RuntimeException("Kakao 연결 끊기 실패: " + response.getStatusCode());
