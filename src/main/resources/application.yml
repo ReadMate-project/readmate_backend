@@ -40,18 +40,18 @@ kakao:
   admin-key: ${KAKAO_ADMIN_KEY}
 
 
-#cloud:
-#  aws:
-#    s3:
-#      bucket:
-#    credentials:
-#      access-key:  ${CLOUD_AWS_S3_CREDENTIALS_ACCESS_KEY}
-#      secret-key:  ${CLOUD_AWS_S3_CREDENTIALS_SECRET_KEY}
-#    region:
-#      static: ap-northeast-2
-#      auto: false
-#    stack:
-#      auto: false
+cloud:
+  aws:
+    s3:
+      bucket:
+    credentials:
+      access-key:  ${S3ACCESSKEY}
+      secret-key:  ${S3SECRETKEY}
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
 
 aladin:
   url: ${ALADIN_API}

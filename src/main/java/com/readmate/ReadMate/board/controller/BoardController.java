@@ -13,6 +13,7 @@ import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.common.message.ErrorResponse;
+import com.readmate.ReadMate.image.service.ImageService;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,6 +42,7 @@ public class BoardController {
     private final BoardService boardService;
     private final BookClubMemberService bookClubMemberService;
     private final BookClubChallengeService bookClubChallengeService;
+    private final ImageService imageService;
 
 
     //0.게시판 작성
@@ -205,6 +207,8 @@ public class BoardController {
                 return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
             }
 
+            //게시글에 해당하는 이미지들 삭제
+            imageService.deleteImagesByBoardId(boardId);
 
             boolean isDeleted = boardService.deleteBoard(boardId);
 
