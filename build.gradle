@@ -62,7 +62,6 @@ test {
 }
 
 
-
 tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs += ["-parameters"]
 	options.forkOptions.javaHome = file(System.getenv("JAVA_HOME"))
