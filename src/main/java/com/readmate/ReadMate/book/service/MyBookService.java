@@ -27,11 +27,11 @@ public class MyBookService {
     public List<MyBookResponse> getMyBooks(CustomUserDetails userDetails) {
         Long userId = userDetails.getUser().getUserId();
 
-        List<MyBook> myBookList = myBookRepository.findByUser_UserIdAndDelYn(userId, "N");
+        List<MyBook> myBookList = myBookRepository.findByUserIdAndDelYnFalse(userId);
         List<MyBookResponse> myBookResponseList = new ArrayList<>();
 
         for (MyBook myBook : myBookList){
-            Book book = bookRepository.findById(myBook.getBook().getIsbn13())
+            Book book = bookRepository.findByIsbn13(myBook.getIsbn13())
                     .orElseThrow(() -> new CustomException(ErrorCode.BOOK_NOT_FOUND));
             myBookResponseList.add(new MyBookResponse(myBook.getMyBookId(), book, myBook.getLastReadDate()));
         }
@@ -43,12 +43,12 @@ public class MyBookService {
 
     public void saveMyBook(CustomUserDetails user, Book saveBook) {
         // 이미 서재에 있는지 확인
-        MyBook existingMyBook = myBookRepository.findByUserAndBookAndDelYn(user.getUser(), saveBook, "N");
+        MyBook existingMyBook = myBookRepository.findByUserIdAndIsbn13AndDelYnFalse(user.getUser().getUserId(), saveBook.getIsbn13());
         if (existingMyBook == null) {
 
             MyBook newBook = MyBook.builder()
-                    .book(saveBook)
-                    .user(user.getUser())
+                    .isbn13(saveBook.getIsbn13())
+                    .userId(user.getUser().getUserId())
                     .lastReadDate(LocalDate.now())
                     .build();
             myBookRepository.save(newBook);
@@ -62,18 +62,18 @@ public class MyBookService {
             throw new CustomException(ErrorCode.BOOK_NOT_FOUND);
         }
 
-        MyBook myBook = myBookRepository.findByUserAndBook(userDetails.getUser(), book);
+        MyBook myBook = myBookRepository.findByUserIdAndIsbn13(userDetails.getUser().getUserId(), book.getIsbn13());
 
         if (myBook == null) {
             myBook = MyBook.builder()
-                    .book(book)
-                    .user(userDetails.getUser())
+                    .isbn13(book.getIsbn13())
+                    .userId(userDetails.getUser().getUserId())
                     .lastReadDate(LocalDate.now())
-                    .delYn("N")
+                    .delYn(false)
                     .build();
             myBookRepository.save(myBook);
-        } else if (myBook.getDelYn().equals("Y")) {
-            myBook.setDelYn("N");
+        } else if (!myBook.isDelYn()) {
+            myBook.setDelYn(false);
             myBook.setLastReadDate(LocalDate.now());
             myBookRepository.save(myBook);
         } else {
@@ -86,10 +86,10 @@ public class MyBookService {
         Book book = bookRepository.findByIsbn13(isbn13)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOOK_NOT_FOUND));
 
-        MyBook myBook = myBookRepository.findByUserAndBookAndDelYn(userDetails.getUser(), book, "N");
+        MyBook myBook = myBookRepository.findByUserIdAndIsbn13AndDelYnFalse(userDetails.getUser().getUserId(), book.getIsbn13());
 
         if (myBook != null) {
-            myBook.setDelYn("Y");
+            myBook.setDelYn(true);
             myBookRepository.save(myBook);
         } else {
             throw new CustomException(ErrorCode.BOOK_NOT_IN_LIBRARY);

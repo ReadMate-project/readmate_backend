@@ -4,6 +4,7 @@ import com.readmate.ReadMate.book.dto.res.MyBookResponse;
 import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import com.readmate.ReadMate.book.service.MyBookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -4,11 +4,12 @@ import com.readmate.ReadMate.board.dto.*;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.service.BoardService;
-import com.readmate.ReadMate.bookclub.dto.res.BookClubMemberResponse;
-import com.readmate.ReadMate.bookclub.entity.BookClubMember;
-import com.readmate.ReadMate.bookclub.entity.BookClubMemberRole;
-import com.readmate.ReadMate.bookclub.service.BookClubChallengeService;
-import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.bookclub.bookClubMember.dto.BookClubMemberResponse;
+import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMember;
+import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMemberRole;
+import com.readmate.ReadMate.bookclub.bookClubChallenge.service.BookClubChallengeService;
+import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
+import com.readmate.ReadMate.bookclub.dailyMission.service.BookClubMissionService;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.common.message.BasicResponse;
@@ -43,6 +44,7 @@ public class BoardController {
     private final BookClubMemberService bookClubMemberService;
     private final BookClubChallengeService bookClubChallengeService;
     private final ImageService imageService;
+    private final BookClubMissionService bookClubMissionService;
 
 
     //0.게시판 작성
@@ -78,7 +80,7 @@ public class BoardController {
                 if (boardRequest.getBookclubId() != null) {
                     try {
                         // 북클럽 멤버 여부 확인
-                        member = bookClubMemberService.findApprovedMemberByUserId(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
+                        member = bookClubMemberService.findApprovedMember(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
                     } catch (CustomException e) {
                         throw new CustomException(ErrorCode.FORBIDDEN);
                     }
@@ -90,7 +92,7 @@ public class BoardController {
                     // 북클럽 멤버 여부 확인
                     System.out.println("User ID: "+userDetails.getUser().getUserId()+ "BookClub ID:"+ boardRequest.getBookclubId());
 
-                    bookClubMemberService.findMember(boardRequest.getBookclubId(), userDetails);
+                    bookClubMemberService.findApprovedMember(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
                     boardRequest.setBookId(null);
                 } catch (CustomException e) {
                     throw new CustomException(ErrorCode.FORBIDDEN);
@@ -123,7 +125,7 @@ public class BoardController {
         // 챌린지 인증 미션 완료 처리 (bookclubId가 있는 경우)
         if (boardType == BoardType.FEED && boardRequest.getBookclubId() != null) {
             Long dailyMissionId = boardRequest.getDailyMissionId();
-            bookClubChallengeService.completeMission(dailyMissionId, member, board);
+            bookClubMissionService.completeMission(dailyMissionId, userDetails.getUser().getUserId(), board.getBoardId());
         }
 
         // 게시물 저장
@@ -284,7 +286,7 @@ public class BoardController {
             Long userId = userDetails.getUser().getUserId();
 
             // 로그인한 유저가 해당 북클럽의 회원인지 확인
-            List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMember(bookclubId, userDetails);
+            List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMembers(bookclubId, userDetails.getUser().getUserId(),false);
 
             // memberResponses를 사용해 북클럽 회원인지 확인
             if (memberResponses.isEmpty()) {
@@ -333,7 +335,7 @@ public class BoardController {
 
             // 해당 북클럽의 회원인지 확인
             try { // memberResponses가 비어있지 않은 경우는 이미 회원인 경우이므로 아무 행동도 하지 않음
-                 bookClubMemberService.findMember(board.getBookclubId(), userDetails);
+                 bookClubMemberService.findMembers(board.getBookclubId(), userDetails.getUser().getUserId(),false);
             } catch (CustomException e) {
                 if (e.getErrorCode() == ErrorCode.NOT_MEMBER) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이 게시물은 북클럽 회원만 볼 수 있습니다.");
@@ -384,12 +386,9 @@ public class BoardController {
         return ResponseEntity.ok(BasicResponse.ofSuccess(feedResponses));
     }
 
-
-
-
     // 북클럽 리더인지 확인하는 메서드 -> 공지사항땜에 필요
     private void validateLeader(Long bookclubId, CustomUserDetails userDetails) {
-        List<BookClubMemberResponse> members = bookClubMemberService.findMember(bookclubId, userDetails);
+        List<BookClubMemberResponse> members = bookClubMemberService.findMembers(bookclubId, userDetails.getUser().getUserId(),false);
         boolean isLeader = members.stream()
                 .anyMatch(member -> member.getUserId().equals(userDetails.getUser().getUserId()) &&
                         member.getClubMemberRole().equals(BookClubMemberRole.LEADER));

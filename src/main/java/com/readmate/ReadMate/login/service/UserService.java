@@ -170,6 +170,11 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+    public User findByUserId(final Long  userId) {
+        return userRepository.findByUserId(userId).orElse(null);
+    }
+
+
     public void updateUser(User user) {
         userRepository.save(user);
     }

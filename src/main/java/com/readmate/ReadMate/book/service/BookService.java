@@ -20,8 +20,10 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 @RequiredArgsConstructor
 public class BookService {
+
     @Value("${aladin.url}")
     private String aladinUrl;
+
     private final BookRepository bookRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 

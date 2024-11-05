@@ -1,11 +1,10 @@
 package com.readmate.ReadMate.comment.controller;
 
-import com.readmate.ReadMate.board.dto.BoardRequest;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.service.BoardService;
-import com.readmate.ReadMate.bookclub.dto.res.BookClubMemberResponse;
-import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.bookclub.bookClubMember.dto.BookClubMemberResponse;
+import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.comment.dto.CommentRequest;
 import com.readmate.ReadMate.comment.dto.CommentResWithPageInfo;
 import com.readmate.ReadMate.comment.dto.PageInfo;
@@ -17,7 +16,7 @@ import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -66,7 +64,7 @@ public class CommentController {
             Long bookclubId = board.getBookclubId();
 
             // 사용자가 해당 북클럽의 회원인지 확인
-            List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMember(bookclubId, userDetails);
+            List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMembers(bookclubId, userDetails.getUser().getUserId(),false);
             if (memberResponses.isEmpty()) {
                 throw new CustomException(ErrorCode.UNAUTHORIZED);
             }
