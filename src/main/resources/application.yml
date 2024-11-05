@@ -39,7 +39,6 @@ spring :
 kakao:
   admin-key: ${KAKAO_ADMIN_KEY}
 
-
 cloud:
   aws:
     s3:
