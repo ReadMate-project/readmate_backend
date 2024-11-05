@@ -29,13 +29,6 @@ public class BookClubMemberController {
     @Autowired
     private  BoardService boardService;
 
-    /**
-     * 북클럽 가입 신청 메소드
-     * @param userDetails 인증된 사용자 정보
-     * @param bookClubId 북클럽 ID
-     * @param bookClubJoinRequest 가입 신청 정보
-     * @return 가입 신청 결과
-     */
     @PostMapping()
     @Operation(summary = "북클럽 가입하기", description = "북클럽에 가입합니다")
     public ResponseEntity<?> joinClub(@AuthenticationPrincipal CustomUserDetails userDetails,
@@ -45,25 +38,14 @@ public class BookClubMemberController {
 
     }
 
-    /**
-     * 북클럽 탈퇴 메서드
-     * @param userDetails 인증된 사용자 정보
-     * @param bookClubId 북클럽 ID
-     * @return 가입 신청 결과
-     */
+
     @DeleteMapping()
     @Operation(summary = "북클럽 탈퇴하기", description = "북클럽을 탈퇴합니다")
     public ResponseEntity<?> leaveClub(@AuthenticationPrincipal final CustomUserDetails userDetails,
                                        @PathVariable @NotNull final long bookClubId){
         return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubMemberService.leaveClub(bookClubId,userDetails.getUser().getUserId())));
     }
-    /**
-     * 북클럽 가입 승인 메서드
-     * @param userDetails 인증된 사용자 정보
-     * @param bookClubId 북클럽 ID
-     * @param userId 승인할 멤버 ID
-     * @return 승인 결과
-     */
+
     @PostMapping("/approve/{userId}")
     @Operation(summary = "북클럽 가입 승인", description = "북클럽 멤버의 가입을 승인합니다")
     public ResponseEntity<?> approveMember(@AuthenticationPrincipal CustomUserDetails userDetails,
@@ -90,12 +72,9 @@ public class BookClubMemberController {
 
     /**
      * 북클럽 가입 신청한 모든 멤버 조회
-     * @param userDetails 인증된 사용자 정보
-     * @param bookClubId 북클럽 ID
-     * @return 200
      */
     @GetMapping("/all")
-    @Operation(summary = "북클럽 멤버 조회", description = "북클럽 가입된 멤버를 조회합니다.")
+    @Operation(summary = "북클럽 멤버 조회", description = "북클럽 가입된 모든 멤버를 조회합니다.")
     public ResponseEntity<?> findAllMember(@AuthenticationPrincipal CustomUserDetails userDetails,
                                         @PathVariable Long bookClubId) {
         // 가입 승인 로직 호출

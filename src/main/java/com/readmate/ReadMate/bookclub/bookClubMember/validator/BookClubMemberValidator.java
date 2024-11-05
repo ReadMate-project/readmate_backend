@@ -2,7 +2,6 @@ package com.readmate.ReadMate.bookclub.bookClubMember.validator;
 
 
 import com.readmate.ReadMate.bookclub.bookClubMember.repository.BookClubMemberRepository;
-import com.readmate.ReadMate.bookclub.club.repository.BookClubRepository;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;

@@ -7,7 +7,6 @@ import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.bookclub.bookClubMember.dto.BookClubMemberResponse;
 import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMember;
 import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMemberRole;
-import com.readmate.ReadMate.bookclub.bookClubChallenge.service.BookClubChallengeService;
 import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.bookclub.dailyMission.service.BookClubMissionService;
 import com.readmate.ReadMate.common.exception.CustomException;

@@ -57,6 +57,4 @@ public class BookClubResponse {
         this.challenges = challenges;
 
     }
-
-
 }

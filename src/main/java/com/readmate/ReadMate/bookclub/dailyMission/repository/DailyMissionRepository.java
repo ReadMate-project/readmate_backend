@@ -1,6 +1,5 @@
 package com.readmate.ReadMate.bookclub.dailyMission.repository;
 
-import com.readmate.ReadMate.bookclub.bookClubChallenge.entity.BookClubChallenge;
 import com.readmate.ReadMate.bookclub.dailyMission.entity.DailyMission;
 import org.springframework.data.jpa.repository.JpaRepository;
 

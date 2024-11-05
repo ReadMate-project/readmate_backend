@@ -1,10 +1,7 @@
 package com.readmate.ReadMate.bookclub.bookClubMember.repository;
 
 import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMember;
-import com.readmate.ReadMate.bookclub.club.entity.BookClub;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,7 +21,6 @@ public interface BookClubMemberRepository extends JpaRepository<BookClubMember, 
 
     // 특정 북클럽 내 탈퇴하지 않은 회원 조회
     List<BookClubMember> findByBookClubIdAndDelYnFalse(long bookClubId);
-
 
     List<BookClubMember> findByUserIdAndIsApproveAndDelYn(Long userId, boolean isApprove, boolean delYn);
 }

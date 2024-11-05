@@ -59,10 +59,10 @@ public class BookClub {
     @NotNull
     private LocalDate recruitmentEndDate = LocalDate.now().plusWeeks(1); // Default to one month later
 
-    @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
+    @Column(name = "del_yn")
     @Builder.Default
     @NotNull
-    private String delYn = "N";
+    private boolean delYn = false;
 
     private List<Long> challengesId;
 
@@ -92,7 +92,7 @@ public class BookClub {
     }
 
     public void delete(){
-        this.delYn = "Y";
+        this.delYn = true;
     }
 
 

@@ -1,7 +1,5 @@
     package com.readmate.ReadMate.bookclub.club.service;
 
-
-
     import com.readmate.ReadMate.book.dto.res.BookResponse;
     import com.readmate.ReadMate.book.entity.Book;
 
@@ -118,7 +116,7 @@
             validateLeaderPermission(bookClub.getLeaderId(), userDetails.getUser().getUserId());
 
             //북클럽이 이미 삭제 되었으면
-            if (bookClub.getDelYn().equals("Y")) {
+            if (bookClub.isDelYn()) {
                 throw new CustomException(ErrorCode.ALREADY_DELETED);
             }
 
@@ -243,8 +241,6 @@
                     .viewCount(bookClub.getViewCount())
                     .build();
         }
-
-
 
     }
 
