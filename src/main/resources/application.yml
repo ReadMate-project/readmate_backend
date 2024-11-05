@@ -43,10 +43,10 @@ kakao:
 cloud:
   aws:
     s3:
-      bucket:
+      bucket: readmate-s3-bucket
     credentials:
-      access-key:  ${S3ACCESSKEY}
-      secret-key:  ${S3SECRETKEY}
+      access-key: ${S3ACCESSKEY}
+      secret-key: ${S3SECRETKEY}
     region:
       static: ap-northeast-2
       auto: false
