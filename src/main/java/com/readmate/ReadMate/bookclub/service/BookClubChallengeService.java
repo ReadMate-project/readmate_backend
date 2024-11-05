@@ -2,6 +2,7 @@ package com.readmate.ReadMate.bookclub.service;
 
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.book.entity.Book;
+import com.readmate.ReadMate.book.repository.BookRepository;
 import com.readmate.ReadMate.bookclub.dto.res.MissionResponse;
 import com.readmate.ReadMate.bookclub.dto.res.UserMissionResponse;
 import com.readmate.ReadMate.bookclub.entity.*;
@@ -24,11 +25,13 @@ import java.util.stream.Collectors;
 @Transactional
 public class BookClubChallengeService {
 
-    private final BookClubChallengeRepository bookClubChallengeRepository;
-    private final DailyMissionRepository dailyMissionRepository;
+    private  final BookClubChallengeRepository bookClubChallengeRepository;
+    private  final DailyMissionRepository dailyMissionRepository;
     private final BookClubMemberRepository bookClubMemberRepository;
     private final BookClubRepository bookClubRepository;
     private final DailyMissionCompletionRepository dailyMissionCompletionRepository;
+    private  final BookRepository bookRepository;
+
     @Transactional
     public MissionResponse getClubChallenge(CustomUserDetails userDetails, Long bookClubId) {
 
@@ -217,6 +220,39 @@ public class BookClubChallengeService {
 
         // 완료된 미션 저장
         dailyMissionCompletionRepository.save(completion);
+    }
+
+    @Transactional
+    public void scheduleService(){
+        LocalDate today = LocalDate.now();
+
+        List<BookClubChallenge> bookClubChallenges = bookClubChallengeRepository.findAllByDelYn("N");
+
+        for(BookClubChallenge bookClubChallenge : bookClubChallenges){
+
+            DailyMission dailyMission = dailyMissionRepository.findByChallengeAndMissionDate(bookClubChallenge, today);
+            Long todayPage = (long) dailyMission.getEndPage();
+
+            Book book = bookRepository.findByIsbn13(bookClubChallenge.getBook().getIsbn13())
+                    .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
+
+            Long totalPage = book.getTotalPages();
+
+            int percentage = (int) ((todayPage/totalPage)*100);
+
+            BookClubChallenge updatedChallenge = BookClubChallenge.builder()
+                    .challengeId(bookClubChallenge.getChallengeId())
+                    .bookClub(bookClubChallenge.getBookClub())
+                    .book(bookClubChallenge.getBook())
+                    .startDate(bookClubChallenge.getStartDate())
+                    .endDate(bookClubChallenge.getEndDate())
+                    .progressPercentage(percentage)
+                    .build();
+
+            // 업데이트된 객체 저장
+            bookClubChallengeRepository.save(updatedChallenge);
+        }
+
     }
 
 
