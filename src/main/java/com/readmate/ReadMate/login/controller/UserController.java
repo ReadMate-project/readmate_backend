@@ -48,7 +48,7 @@ public class UserController {
     //1.1 DB에 해당 유저의 정보가 없을 경우 -> 회원가입절차로 DB에 유저 정보 저장
     //1.2 DB에 해당 유저의 정보가 있을 경우 -> 로그인
 //    @GetMapping("/oauth2/kakao/code")
-    @GetMapping("/login/kakao")  // 프론트에서 인가코드 받아오는 url -> redirect로 프론트와 동일하게 설정해야한다.
+    @PostMapping("/login/kakao")  // 프론트에서 인가코드 받아오는 url -> redirect로 프론트와 동일하게 설정해야한다.
     @Operation(summary = "회원가입 및 로그인", description = "유저의 정보가 있을 시 회원가입, 없을 시 로그인을 실시하는 API")
     public ResponseEntity<BasicResponse<String>> kakaoLogin(
             @RequestParam(name = "code") String code,
