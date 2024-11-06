@@ -41,7 +41,6 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BookClubMemberService bookClubMemberService;
-    private final BookClubChallengeService bookClubChallengeService;
     private final ImageService imageService;
     private final BookClubMissionService bookClubMissionService;
 
