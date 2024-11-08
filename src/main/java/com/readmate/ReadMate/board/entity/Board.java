@@ -1,5 +1,6 @@
 package com.readmate.ReadMate.board.entity;
 
+import com.readmate.ReadMate.common.formatter.DateFormatter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,19 +40,18 @@ public class Board {
     private String content;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private String createdAt;
 
     @Column(name = "title")
     private String title;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = DateFormatter.formatDate(LocalDateTime.now());
     }
 
     @PreUpdate
-    protected void onUpdate() {
-        this.createdAt = LocalDateTime.now();
+    public void onUpdate() {
+        this.createdAt = DateFormatter.formatDate(LocalDateTime.now());
     }
-
 }

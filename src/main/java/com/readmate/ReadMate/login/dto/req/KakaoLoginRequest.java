@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 public class KakaoLoginRequest {
 
-    private String code;  // 카카오 인증 코드 (front에서 주는 인증코드);\
+    private String code;  // 카카오 인증 코드 (front에서 주는 인증코드)
 
     private String nickname;
     private String content;
