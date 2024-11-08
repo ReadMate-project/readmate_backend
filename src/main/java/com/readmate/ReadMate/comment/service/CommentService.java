@@ -1,12 +1,11 @@
 package com.readmate.ReadMate.comment.service;
 
-import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.comment.dto.CommentRequest;
 import com.readmate.ReadMate.comment.entity.Comment;
 import com.readmate.ReadMate.comment.repository.CommentRepository;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

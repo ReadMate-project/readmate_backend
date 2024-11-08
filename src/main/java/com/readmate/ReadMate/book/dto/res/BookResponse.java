@@ -25,4 +25,5 @@ public class BookResponse {
     private String publisher;
 
     private String bookCover;
+
 }

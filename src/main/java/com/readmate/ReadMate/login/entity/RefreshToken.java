@@ -11,6 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name="refresh_token")
 public class RefreshToken {
     
     //refreshToken을 가지고 accessToken을 발급해주는 거임
