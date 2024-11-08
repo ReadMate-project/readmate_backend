@@ -112,7 +112,9 @@ public class BookClubMissionService {
                     User user = userService.findByUserId(completion.getUserId()); // userId를 사용하여 프로필 정보 조회
                     return new CompletedUser(
                             user.getUserId(),  // userId 매핑
-                            user.getProfileImageUrl()              // userProfile 매핑
+                            user.getProfileImageUrl(),           // userProfile 매핑
+                            user.getNickname()
+
                     );
                 })
                 .collect(Collectors.toList());
