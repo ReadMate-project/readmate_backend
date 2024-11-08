@@ -15,7 +15,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/bookClub/{bookClubId}/challenges")
+    @RequestMapping("/api/v1/bookClub/challenges")
 @Tag(name = "BookClubChallenge", description = "BookClubChallenge API")
 public class BookClubChallengeController {
 
@@ -25,7 +25,7 @@ public class BookClubChallengeController {
     /**
      * 오늘의 진행 상황
      */
-    @GetMapping
+    @GetMapping("{bookClubId}")
     public ResponseEntity<?> getTodayChallenge(@AuthenticationPrincipal @Valid CustomUserDetails userDetails, @PathVariable final long bookClubId){
         return ResponseEntity.ok(BasicResponse.ofCreateSuccess(bookClubChallengeService.getClubChallenge(userDetails.getUser().getUserId(),bookClubId
         )));
@@ -43,7 +43,7 @@ public class BookClubChallengeController {
     /**e
      *미션을 완수한 User 조회하는 메서드
      */
-    @GetMapping("/completed") // 적절한 엔드포인트 설정
+    @GetMapping("/{bookClubId}/completed") // 적절한 엔드포인트 설정
     public ResponseEntity<?> getUserChallenge(
             @PathVariable Long bookClubId,
             @AuthenticationPrincipal CustomUserDetails userDetails,

@@ -21,6 +21,7 @@
     import com.readmate.ReadMate.common.exception.CustomException;
     import com.readmate.ReadMate.common.exception.enums.ErrorCode;
     import com.readmate.ReadMate.login.security.CustomUserDetails;
+    import com.readmate.ReadMate.login.service.UserService;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.Sort;
@@ -49,6 +50,7 @@
         private final BookClubMemberService bookClubMemberService;
         private final BookClubChallengeService bookClubChallengeService;
         private final BookService bookService;
+        private final UserService userService;
         private final DailyMissionRepository dailyMissionRepository;
         private final BookClubChallengeRepository bookClubChallengeRepository;
 
@@ -66,6 +68,9 @@
 
             //Leader ID 를 북클럽 생성한 USER ID 로 생성
             Long leaderId = userDetails.getUser().getUserId();
+            //Leader ID 검증 - userRepo 에 있는지
+            userService.getById(leaderId);
+
             bookClub.setLeaderId(leaderId);
 
             //북클럽 생성하고, Leader 가입
@@ -195,10 +200,6 @@
                     .orElse(null);
         }
 
-
-        /**
-         * 북클럽 증가 메소드
-         */
         public void incrementViewCount(Long bookClubId) {
             BookClub bookClub = bookClubRepository.findById(bookClubId)
                     .orElseThrow(() -> new CustomException(INVALID_CLUB));

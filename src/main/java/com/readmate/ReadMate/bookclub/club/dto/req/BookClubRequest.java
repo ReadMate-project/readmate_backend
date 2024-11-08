@@ -27,7 +27,6 @@ public class BookClubRequest {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate endDate;
 
-
     // 모집 기간
     @NotNull
     @DateTimeFormat(pattern = "yyyy-MM-dd")

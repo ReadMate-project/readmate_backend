@@ -64,8 +64,6 @@ public class BookClub {
     @NotNull
     private boolean delYn = false;
 
-    private List<Long> challengesId;
-
     //인기 있는 북클럽 정렬을 위해 컬럼 추가
     @Column(name = "view_count")
     @Builder.Default

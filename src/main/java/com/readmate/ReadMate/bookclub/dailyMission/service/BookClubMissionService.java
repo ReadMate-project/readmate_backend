@@ -56,7 +56,8 @@ public class BookClubMissionService {
         Long totalPages = book.getTotalPages();
 
         MissionPageInfo missionPageInfo = calculatePagesPerDay(totalPages, startDate, endDate);
-        List<DailyMission> dailyMissions = generateDailyMission(challenge, startDate, endDate, missionPageInfo);
+        List<DailyMission> dailyMissions = generateDailyMission(challenge.getChallengeId(), startDate, endDate, missionPageInfo);
+        System.out.println("dailyMissions = " + dailyMissions);
         dailyMissionRepository.saveAll(dailyMissions);
     }
 
@@ -69,12 +70,12 @@ public class BookClubMissionService {
         return new MissionPageInfo(pagesPerDay, remainder);
     }
 
-    private List<DailyMission> generateDailyMission(BookClubChallenge challenge,LocalDate startDate, LocalDate endDate, MissionPageInfo missionPageInfo){
+    private List<DailyMission> generateDailyMission(final long bookClubChallengeId ,LocalDate startDate, LocalDate endDate, MissionPageInfo missionPageInfo){
         List<DailyMission> dailyMissions = new ArrayList<>();
         int currentPage =1;
 
         //startDate ~ endDate 까지 미션 생성
-        for (LocalDate date = startDate; date.isAfter(endDate); date = date.plusDays(1)){
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)){
             int endPage = currentPage + missionPageInfo.getPagesPerDay()-1; //읽어야할 페이지 계산
             // 나머지 페이지 수가 남아있는 경우 하루에 읽어야할 페이지 +1 증가 또는 감소
             if(missionPageInfo.getRemainder() > 0){
@@ -86,7 +87,7 @@ public class BookClubMissionService {
                     .missionDate(date)
                     .startPage(currentPage)
                     .endPage(endPage)
-                    .challengeId(challenge.getChallengeId())
+                    .challengeId(bookClubChallengeId)
                     .build());
 
             currentPage = endPage + 1; //현재 페이지를 endPage +1

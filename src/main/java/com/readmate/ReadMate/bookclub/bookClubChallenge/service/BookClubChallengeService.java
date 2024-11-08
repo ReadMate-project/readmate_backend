@@ -57,20 +57,21 @@ public class BookClubChallengeService {
     public ChallengeResponse getClubChallenge(final long userId, Long bookClubId) {
 
         //1. 유저가 해당 북클럽의 승인된 멤버인지 확인
-        BookClubMember member = bookClubMemberService.findApprovedMember(bookClubId,userId);
+        bookClubMemberService.validateApprovedMember(bookClubId,userId);
 
         //2. 북클럽 챌린지에서 챌린지 정보 가져옴 -> 없을 경우 빈 객체 반환
         LocalDate today = LocalDate.now();
         BookClubChallenge bookClubChallenge = bookClubChallengeRepository.findCurrentChallengeByBookClubIdAndDate(bookClubId, today)
                 .orElseGet(BookClubChallenge::new);
 
+        System.out.println("bookClubChallenge.getBookClubId() = " + bookClubChallenge.getBookClubId());
 
         //3. 가져온 챌린지 정보로 책정보 조회
         BookResponse bookResponse = bookService.getBookByIsbn(bookClubChallenge.getIsbn13());
 
         //4. DailyMission 찾기
         DailyMission dailyMission = bookClubMissionService
-                .getByChallengeAndDate(bookClubChallenge.getBookClubId(), today);
+                .getByChallengeAndDate(bookClubChallenge.getChallengeId(), today);
 
         return ChallengeResponse.builder()
                 .missionId(dailyMission.getMissionId())
@@ -89,17 +90,28 @@ public class BookClubChallengeService {
         List<Long> bookClubIds = bookClubMemberService.findBookClubIdsByUserId(userId);
         LocalDate today = LocalDate.now();
 
-// 2. 북클럽 내 오늘의 Mission 조회 및 UserMissionResponse 생성
+    // 2. 북클럽 내 오늘의 Mission 조회 및 UserMissionResponse 생성
         return bookClubIds.stream()
                 .map(bookClubId -> {
                     // bookClubId로 BookClub 정보를 가져옴
                     BookClub bookClub = bookClubRepository.findById(bookClubId)
                             .orElseThrow( () ->  new CustomException(ErrorCode.INVALID_CLUB));
 
+                    System.out.println("bookClub.getBookClubId()+today = " + bookClub.getBookClubId()+today);
+
+
                     // 해당 bookClubId로 오늘의 Challenge 조회
                     BookClubChallenge bookClubChallenge = bookClubChallengeRepository
-                            .findCurrentChallengeByBookClubIdAndDate(bookClubId, today)
+                            .findCurrentChallengeByBookClubIdAndDate(bookClub.getBookClubId(), today)
                             .orElseGet(BookClubChallenge::new);
+
+                    System.out.println("bookClubChallenge.getIsbn13() = " + bookClubChallenge.getIsbn13());
+
+                    if (bookClubChallenge != null) {
+                        System.out.println("isbn13: " + bookClubChallenge.getIsbn13());
+                    } else {
+                        System.out.println("Challenge not found or isbn13 is null.");
+                    }
 
                     // Challenge에 대한 도서 정보 조회
                     BookResponse bookResponse = bookService.getBookByIsbn(bookClubChallenge.getIsbn13());

@@ -47,12 +47,11 @@ public class BookClubController {
 
     @GetMapping("/{bookClubId}")
     @Operation(summary = "북클럽 조회", description = "북클럽 조회합니다")
-    public ResponseEntity<?> getBookClub(@PathVariable(name = "bookClubId") Long bookClubId) {
+    public ResponseEntity<?> getBookClub(@PathVariable(name = "bookClubId") final long bookClubId) {
         // 조회하면 조회수 증가하도록
         bookClubService.incrementViewCount(bookClubId);
         BookClubResponse bookClubResponse = bookClubService.getBookClub(bookClubId);
         return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubResponse));
-
     }
 
 }

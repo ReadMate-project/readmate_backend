@@ -27,9 +27,12 @@ public class BookClubValidator {
         LocalDate progressEnd = clubRequest.getEndDate();
 
         // 모집 종료일이 모집 시작일보다 앞설 경우 에러
+        // 북클럽 시작일이 모집 마감일 전일 경우
+        // 북클럽 진행 마감날이 시작날 전일 경우
         if (recruitmentEnd.isBefore(recruitmentStart) || progressStart.isBefore(recruitmentEnd) || progressEnd.isBefore(progressStart)) {
             throw new CustomException(ErrorCode.INVALID_CLUB_DATES);
         }
+
     }
 
 

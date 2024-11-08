@@ -17,6 +17,7 @@ import com.readmate.ReadMate.image.service.ImageService;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -51,6 +52,7 @@ public class BoardController {
     //0-3. 북클럽 내 자유게시판 -> 북클럽 회원만 작성할 수 있음
     @PostMapping
     @Operation(summary = "게시물 작성", description = "게시물 작성 API")
+    @Transactional // 문제 발생 시 롤백 위해
     public ResponseEntity<BasicResponse<Board>> createBoard(@RequestBody BoardRequest boardRequest,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -120,14 +122,15 @@ public class BoardController {
         board.setBoardType(boardType);
 
 
-        // 챌린지 인증 미션 완료 처리 (bookclubId가 있는 경우)
+    // 게시물 저장
+        Board savedBoard = boardService.saveBoard(userDetails, board);
+
+    // 챌린지 인증 미션 완료 처리 (bookclubId가 있는 경우)
         if (boardType == BoardType.FEED && boardRequest.getBookclubId() != null) {
             Long dailyMissionId = boardRequest.getDailyMissionId();
-            bookClubMissionService.completeMission(dailyMissionId, userDetails.getUser().getUserId(), board.getBoardId());
+            bookClubMissionService.completeMission(dailyMissionId, userDetails.getUser().getUserId(), savedBoard.getBoardId());
         }
 
-        // 게시물 저장
-        Board savedBoard = boardService.saveBoard(userDetails, board);
 
         BasicResponse<Board> response = BasicResponse.ofCreateSuccess(savedBoard);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
