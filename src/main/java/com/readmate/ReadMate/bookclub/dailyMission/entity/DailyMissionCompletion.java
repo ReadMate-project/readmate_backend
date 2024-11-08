@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -24,6 +26,7 @@ public class DailyMissionCompletion {
     @Column(name = "user_id")
     private Long userId; // 미션을 완료한 멤버
 
-    private LocalDate completionDate; // 미션 완료 날짜
+    @Column(name = "completed_date")
+    private LocalDateTime completionDate; // 미션 완료 날짜
 
 }

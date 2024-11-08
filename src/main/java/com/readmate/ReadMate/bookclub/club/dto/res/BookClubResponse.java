@@ -55,6 +55,5 @@ public class BookClubResponse {
         this.recruitmentEndDate = bookClub.getRecruitmentEndDate();
         this.recruitmentStartDate = bookClub.getRecruitmentStartDate();
         this.challenges = challenges;
-
     }
 }

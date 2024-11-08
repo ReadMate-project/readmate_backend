@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -144,7 +145,7 @@ public class BookClubMissionService {
         DailyMissionCompletion completion = DailyMissionCompletion.builder()
                 .dailyMissionId(dailyMissionId)
                 .userId(userId)
-                .completionDate(LocalDate.now())  // 현재 날짜로 완료 날짜 설정
+                .completionDate(LocalDateTime.now())  // 현재 날짜로 완료 날짜 설정
                 .build();
 
         // 완료된 미션 저장

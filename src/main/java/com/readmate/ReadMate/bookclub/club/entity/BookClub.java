@@ -8,6 +8,7 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -35,7 +36,7 @@ public class BookClub {
 
     @NotNull
     @Column(name = "start_date")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd ")
     @Builder.Default
     private LocalDate startDate = LocalDate.now().plusDays(8);
 
@@ -69,6 +70,9 @@ public class BookClub {
     @Builder.Default
     private Long viewCount = 0L;
 
+    @Column(name="created_at")
+    private LocalDateTime createdAt;
+
     public void createBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());
         this.setDescription(clubRequest.getDescription());
@@ -76,7 +80,7 @@ public class BookClub {
         this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
         this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
         this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
-
+        this.createdAt = LocalDateTime.now();
     }
 
     public void updateBookClub(BookClubRequest clubRequest){

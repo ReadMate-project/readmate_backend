@@ -5,7 +5,6 @@ import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.bookclub.bookClubChallenge.entity.BookClubChallenge;
 import com.readmate.ReadMate.bookclub.bookClubChallenge.repository.BookClubChallengeRepository;
-import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMember;
 import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.bookclub.club.dto.req.BookInfoRequest;
 import com.readmate.ReadMate.bookclub.club.entity.BookClub;
