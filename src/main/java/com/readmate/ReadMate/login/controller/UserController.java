@@ -95,7 +95,6 @@ public class UserController {
                 //해당 토큰은 accessToken을 JWT로 변환해서 보내는 것이기에 보안에서 문제 없음
                 String newAccessToken  = tokenService.renewAccessToken(refreshToken);
 
-                // 사용자 인증 처리
                 CustomUserDetails userDetails = new CustomUserDetails(user);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
