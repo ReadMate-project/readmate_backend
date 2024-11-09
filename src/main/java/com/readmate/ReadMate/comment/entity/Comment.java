@@ -30,16 +30,15 @@ public class Comment {
     private String content;
 
     @Column(name = "created_at")
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = DateFormatter.formatDate(LocalDateTime.now());
+        this.createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
     public void onUpdate() {
-        this.createdAt = DateFormatter.formatDate(LocalDateTime.now());
+        this.createdAt = LocalDateTime.now();
     }
-
 }
