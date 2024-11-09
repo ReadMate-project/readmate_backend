@@ -23,19 +23,17 @@ public class MyBook {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long myBookId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;  // 어떤 사용자인지 저장
+    @Column(name = "user_id", nullable = false)
+    private Long userId;  // 어떤 사용자인지 저장
 
-    @ManyToOne
-    @JoinColumn(name = "isbn13", referencedColumnName = "isbn13", nullable = false)
-    private Book book;  // Book 엔티티의 isbn13을 참조
+    @Column(name = "isbn13", nullable = false)
+    private String isbn13;  // Book 엔티티의 isbn13을 참조
 
     @Column(name = "last_read_date")
     private LocalDate lastReadDate;
 
-    @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
+    @Column(name = "del_yn")
     @Builder.Default
-    private String delYn = "N";
+    private boolean delYn = false;
 
 }

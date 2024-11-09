@@ -3,7 +3,7 @@ package com.readmate.ReadMate.like.service;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.service.BoardService;
-import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.like.entity.Likes;
@@ -38,7 +38,7 @@ public class LikesSerivce {
         if (board.getBoardType() == BoardType.CLUB_BOARD) {
             // CLUB_BOARD 타입인 경우 북클럽 회원 여부 확인
             Long bookclubId = board.getBookclubId();
-            bookClubMemberService.findMember(bookclubId, userDetails);
+            bookClubMemberService.findApprovedMember(bookclubId, userDetails.getUser().getUserId());
         }
         // BOARD 또는 FEED 타입인 경우 인증된 유저인지 확인만 하면 됨
         else if (board.getBoardType() == BoardType.BOARD || board.getBoardType() == BoardType.FEED) {

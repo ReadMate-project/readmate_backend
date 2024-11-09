@@ -48,7 +48,7 @@ public enum ErrorCode {
     INVALID_BOOK_DATE(409, "CLUB008", "날짜를 잘못 선택하셨습니다."),
     OVERLAPPING_BOOK_DATES(409, "CLUB009", "날짜는 겹칠 수 없습니다."),
     DUPLICATE_CLUB_NAME(409, "CLUB010", "이미 존재하는 북클럽 이름입니다."),
-    INVALID_CLUB_DATES(400, "CLUB011", "북클럽의 시작일이 종료일보다 늦을 수 없습니다."),
+    INVALID_CLUB_DATES(400, "CLUB011", "옳지 않은 날짜 입니다"),
     INVALID_CLUB_MEMBER(404, "CLUB012", "존재하지 않는 클럽 멤버입니다."),
     NOT_APPROVED_MEMBER(403, "CLUB013", "승인되지 않은 클럽 멤버입니다."),
     NOT_LEADER(408, "CLUB014", "해당 클럽의 리더 멤버가 아닙니다."),

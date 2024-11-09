@@ -13,4 +13,6 @@ public class MVPResponse {
     private Long userId;
     private String userNickname;
     private String profileImgUrl;
+    private int likeCount;
+    private int commentCount;
 }

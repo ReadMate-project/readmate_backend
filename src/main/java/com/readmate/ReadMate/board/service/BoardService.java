@@ -1,6 +1,5 @@
 package com.readmate.ReadMate.board.service;
 
-import com.readmate.ReadMate.board.dto.BoardRequest;
 import com.readmate.ReadMate.board.dto.CalendarBookResponse;
 import com.readmate.ReadMate.board.dto.FeedResponse;
 import com.readmate.ReadMate.board.dto.MVPResponse;
@@ -12,7 +11,7 @@ import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.book.repository.BookRepository;
 import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.book.service.MyBookService;
-import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
+import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.comment.repository.CommentRepository;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
@@ -21,12 +20,11 @@ import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import com.readmate.ReadMate.login.security.CustomUserDetailsService;
-import com.readmate.ReadMate.login.service.UserService;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -39,10 +37,8 @@ import java.util.stream.Collectors;
 public class BoardService {
 
     private final BoardRepository boardRepository;
-    private final BookClubMemberService bookClubMemberService;
     private final MyBookService myBookService;
     private final BookService bookService;
-    private final CustomUserDetailsService userDetailsService;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final LikesRepository likesRepository;
@@ -165,18 +161,18 @@ public class BoardService {
         // 1. 해당 북클럽에 속한 피드(에세이) 조회
         List<Board> boards = boardRepository.findByBookclubIdAndBoardType(bookClubId, BoardType.FEED);
 
-        // 2. 각 피드(에세이)에 대해 좋아요, 댓글, 미션 참여 횟수 기준으로 정렬
+        // 2. 각 피드(에세이)에 대해 좋아요, 댓글 수를 조회하고, MVPResponse 객체 생성
         List<MVPResponse> mvpResponses = boards.stream().map(board -> {
 
-                    // 3. 좋아요와 댓글 수 조회
+                    // 좋아요와 댓글 수 조회
                     int likeCount = likesRepository.countByBoardId(board.getBoardId());
                     int commentCount = commentRepository.countByBoardId(board.getBoardId());
 
-                    // 4. 게시글 작성자의 유저 정보 가져오기
+                    // 게시글 작성자의 유저 정보 가져오기
                     User user = userRepository.findById(board.getUserId())
                             .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
-                    // 5. MVPResponse 객체 생성
+                    // MVPResponse 객체 생성, 좋아요와 댓글 수 포함
                     return new MVPResponse(
                             board.getBoardId(),
                             board.getBookId(),
@@ -184,17 +180,16 @@ public class BoardService {
                             board.getContent(),
                             user.getUserId(),
                             user.getNickname(),
-                            user.getProfileImageUrl()
-
+                            user.getProfileImageUrl(),
+                            likeCount,       // 좋아요 수
+                            commentCount     // 댓글 수
                     );
                 })
-                // 6. 좋아요, 댓글 수 기준으로 내림차순 정렬
+                // 3. 좋아요 수와 댓글 수 기준으로 내림차순 정렬
                 .sorted((mvp1, mvp2) -> {
-                    int result = Integer.compare(likesRepository.countByBoardId(mvp2.getBoardId()),
-                            likesRepository.countByBoardId(mvp1.getBoardId()));
+                    int result = Integer.compare(mvp2.getLikeCount(), mvp1.getLikeCount());
                     if (result == 0) {
-                        result = Integer.compare(commentRepository.countByBoardId(mvp2.getBoardId()),
-                                commentRepository.countByBoardId(mvp1.getBoardId()));
+                        result = Integer.compare(mvp2.getCommentCount(), mvp1.getCommentCount());
                     }
                     return result;
                 })
@@ -202,4 +197,5 @@ public class BoardService {
 
         return mvpResponses;
     }
+
 }

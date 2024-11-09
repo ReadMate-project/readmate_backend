@@ -23,6 +23,11 @@ public class BasicResponse<T>{
         return new BasicResponse<>(message, statusCode.value(), data, null);
     }
 
+    public static BasicResponse<Void> ofMessage(String message) {
+        return new BasicResponse<>(message, HttpStatus.OK.value(), null, null);
+    }
+
+
     public static <T> BasicResponse<T> ofSuccess(T data){
         return new BasicResponse<>(SUCCESS, HttpStatus.OK.value(), data, null);
     }

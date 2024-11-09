@@ -2,7 +2,7 @@ package com.readmate.ReadMate.search.dto;
 
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.book.entity.Book;
-import com.readmate.ReadMate.bookclub.entity.BookClub;
+import com.readmate.ReadMate.bookclub.club.entity.BookClub;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

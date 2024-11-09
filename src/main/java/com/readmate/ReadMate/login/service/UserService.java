@@ -170,6 +170,11 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+    public User findByUserId(final Long  userId) {
+        return userRepository.findByUserId(userId).orElse(null);
+    }
+
+
     public void updateUser(User user) {
         userRepository.save(user);
     }
@@ -178,4 +183,9 @@ public class UserService {
     public boolean isNicknameDuplicate(String nickname) {
         return userRepository.existsByNickname(nickname);
     }
+
+    public void getById(final long id){
+        if(!userRepository.existsById(id)){
+            throw new RuntimeException("유저를 찾을 수 없습니다.");
+        };}
 }

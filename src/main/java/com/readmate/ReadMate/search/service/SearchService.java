@@ -7,15 +7,12 @@ import com.readmate.ReadMate.board.specification.BoardSpecification;
 import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.book.repository.BookRepository;
 import com.readmate.ReadMate.book.specification.BookSpecification;
-import com.readmate.ReadMate.bookclub.entity.BookClub;
-import com.readmate.ReadMate.bookclub.repository.BookClubMemberRepository;
-import com.readmate.ReadMate.bookclub.repository.BookClubRepository;
-import com.readmate.ReadMate.bookclub.service.BookClubMemberService;
-import com.readmate.ReadMate.bookclub.specification.BookClubSpecification;
-import com.readmate.ReadMate.login.entity.User;
-import com.readmate.ReadMate.login.repository.UserRepository;
+import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
+import com.readmate.ReadMate.bookclub.club.entity.BookClub;
+import com.readmate.ReadMate.bookclub.bookClubMember.repository.BookClubMemberRepository;
+import com.readmate.ReadMate.bookclub.club.repository.BookClubRepository;
+import com.readmate.ReadMate.bookclub.club.specification.BookClubSpecification;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
-import com.readmate.ReadMate.login.service.UserService;
 import com.readmate.ReadMate.search.dto.SearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,7 +29,7 @@ public class SearchService { //북클럽과 게시판 글 통합해서 검색되
 
     private final BoardRepository boardRepository;
     private final BookClubRepository bookClubRepository;
-    private final BookClubMemberRepository bookClubMemberRepository;
+    private final BookClubMemberService bookClubMemberService;
     private final BookRepository bookRepository;
 
     public SearchResponse searchAll(String keyword, UserDetails userDetails) {
@@ -49,8 +46,7 @@ public class SearchService { //북클럽과 게시판 글 통합해서 검색되
             System.out.println("Authenticated user ID: " + userId);
 
             // 사용자가 소속된 북클럽 ID 리스트 가져오기
-            List<Long> userBookClubIds = bookClubMemberRepository.findBookClubIdsByUserId(userId);
-            System.out.println("User's book clubs: " + userBookClubIds);
+            List<Long> userBookClubIds = bookClubMemberService.findBookClubIdsByUserId(userId);
 
             // BOARD와 FEED 검색
             boards = boards.stream()
