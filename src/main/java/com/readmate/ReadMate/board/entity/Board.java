@@ -40,18 +40,18 @@ public class Board {
     private String content;
 
     @Column(name = "created_at")
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "title")
     private String title;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = DateFormatter.formatDate(LocalDateTime.now());
+        this.createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    public void onUpdate() {
-        this.createdAt = DateFormatter.formatDate(LocalDateTime.now());
+    protected void onUpdate() {
+        this.createdAt = LocalDateTime.now();
     }
 }
