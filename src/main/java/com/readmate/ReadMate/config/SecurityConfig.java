@@ -59,6 +59,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+
+        configuration.addExposedHeader("Authorization");
+
         configuration.addAllowedOrigin("http://localhost:3000");
         configuration.addAllowedOrigin("http://3.35.193.132:3000");
         configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용 (GET, POST, etc.)
