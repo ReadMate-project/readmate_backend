@@ -29,7 +29,7 @@ public class TokenService {
     public String createAccessToken(User user) { //AccessToken을 JWT형식으로 생성함
         return Jwts.builder()
                 .setSubject(user.getUserId().toString())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600000)) //1시간
+                .setExpiration(new Date(System.currentTimeMillis() + 24 * 3600000)) //하루
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
