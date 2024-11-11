@@ -1,7 +1,9 @@
 package com.readmate.ReadMate.login.controller;
 
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
+import com.readmate.ReadMate.image.utils.S3Uploader;
 import com.readmate.ReadMate.login.dto.req.UserUpdateRequest;
 import com.readmate.ReadMate.login.dto.res.BasicResponse;
 import com.readmate.ReadMate.login.dto.req.KakaoLoginRequest;
@@ -17,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,7 +28,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Optional;
 
 
@@ -38,6 +47,7 @@ public class UserController {
     private final UserService userService;
     private final TokenService tokenService;
     private final UserRepository userRepository;
+    private final S3Uploader s3Uploader;
 
 
     @Value("${kakao.admin-key}")
@@ -76,6 +86,15 @@ public class UserController {
                 kakaoUser.setNickname(nickname);
                 kakaoUser.setFavoriteGenre(kakaoLoginRequest.getFavoriteGenre());
 
+                if (kakaoUser.getProfileImageUrl() != null) {
+                    File imageFile = downloadImageFromUrl(kakaoUser.getProfileImageUrl());
+                    String s3ImageUrl = s3Uploader.upload(imageFile, "profile-images");
+                    kakaoUser.setProfileImageUrl(s3ImageUrl); // S3 URL을 User 엔티티에 저장
+                    imageFile.delete(); // 업로드 후 임시 파일 삭제
+                }
+
+
+
                 user = userService.signup(kakaoUser);
                 String refreshToken = tokenService.createRefreshToken(user);
                 tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
@@ -93,7 +112,7 @@ public class UserController {
                 }
 
                 //해당 토큰은 accessToken을 JWT로 변환해서 보내는 것이기에 보안에서 문제 없음
-                String newAccessToken  = tokenService.renewAccessToken(refreshToken);
+                String newAccessToken = tokenService.renewAccessToken(refreshToken);
 
                 CustomUserDetails userDetails = new CustomUserDetails(user);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -101,9 +120,9 @@ public class UserController {
 
 
                 HttpHeaders headers = new HttpHeaders();
-                headers.add("Authorization", "Bearer " + newAccessToken);
-                System.out.println("헤더에 넣을 access token= " + newAccessToken);
-
+//                headers.add("Authorization", "Bearer " + newAccessToken);
+                //헤더에 refresh와 access 함께 보내줌
+                headers.set("Authorization", "Bearer " + newAccessToken + ", Refresh " + refreshToken);
 
                 BasicResponse<String> response = BasicResponse.ofSuccess("로그인 성공");
                 return ResponseEntity.ok().headers(headers).body(response);
@@ -116,7 +135,18 @@ public class UserController {
         }
     }
 
-
+    private File downloadImageFromUrl(String imageUrl) throws IOException {
+        URL url = new URL(imageUrl);
+        File file = File.createTempFile("temp", ".jpg");
+        try (InputStream in = url.openStream(); FileOutputStream out = new FileOutputStream(file)) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        }
+        return file;
+    }
 
 
     // 2. 로그아웃
@@ -135,7 +165,7 @@ public class UserController {
     }
 
 
-    // 회원탈퇴 요청 처리
+    // 3. 회원탈퇴 요청 처리
     @Operation(summary = "회원탈퇴", description = "카카오+DB에서 유저탈퇴 API")
     @PostMapping("/withdraw")
     public ResponseEntity<BasicResponse<String>> withdraw(HttpServletRequest request) {
@@ -198,37 +228,54 @@ public class UserController {
 
 
     //6. 마이페이지 -> 유저정보 수정
-    @Operation(summary = "유저 정보 수정", description = "마이페이지 유저정보 수정 API")
-    @PatchMapping("/user/update")
+    @PatchMapping(value = "/user/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BasicResponse<String>> updateUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody UserUpdateRequest userUpdateRequest) {
+            @RequestPart(value = "userUpdateRequest", required = false) String userUpdateRequestJson,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
         try {
-            // 현재 인증된 사용자 정보 가져오기
             User user = userDetails.getUser();
 
-            // 닉네임 중복 체크
-            if (!user.getNickname().equals(userUpdateRequest.getNickname()) &&
-                    userService.isNicknameDuplicate(userUpdateRequest.getNickname())) {
-                BasicResponse<String> response = BasicResponse.ofFailure(ErrorCode.DUPLICATE_NICKNAME.getMessage(), HttpStatus.CONFLICT);
-                return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            // JSON 문자열이 있을 경우에만 UserUpdateRequest 객체로 변환
+            if (userUpdateRequestJson != null && !userUpdateRequestJson.isEmpty()) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                UserUpdateRequest userUpdateRequest = objectMapper.readValue(userUpdateRequestJson, UserUpdateRequest.class);
+
+                // 닉네임 중복 체크
+                if (!user.getNickname().equals(userUpdateRequest.getNickname()) &&
+                        userService.isNicknameDuplicate(userUpdateRequest.getNickname())) {
+                    BasicResponse<String> response = BasicResponse.ofFailure(ErrorCode.DUPLICATE_NICKNAME.getMessage(), HttpStatus.CONFLICT);
+                    return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+                }
+
+                user.setNickname(userUpdateRequest.getNickname());
+                user.setFavoriteGenre(userUpdateRequest.getFavoriteGenre());
+                user.setContent(userUpdateRequest.getContent());
             }
 
-
-            user.setNickname(userUpdateRequest.getNickname());
-            user.setProfileImageUrl(userUpdateRequest.getProfileImageUrl()); 
-            user.setFavoriteGenre(userUpdateRequest.getFavoriteGenre());
-            user.setContent(userUpdateRequest.getContent());
+            // 프로필 이미지가 있을 경우에만 업데이트
+            if (profileImage != null && !profileImage.isEmpty()) {
+                String newImageUrl = userService.updateUserProfileImage(user, profileImage);
+                user.setProfileImageUrl(newImageUrl); // S3 URL을 User 엔티티에 저장
+            }
 
             userService.updateUser(user);
 
             BasicResponse<String> response = BasicResponse.ofSuccess("유저 정보 수정 성공");
             return ResponseEntity.ok(response);
+        } catch (JsonProcessingException e) {
+            BasicResponse<String> response = BasicResponse.ofFailure("JSON 파싱 오류 발생", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            BasicResponse<String> response = BasicResponse.ofFailure("파일 처리 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            BasicResponse<String> response = BasicResponse.ofFailure("처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+            e.printStackTrace();
+            BasicResponse<String> response = BasicResponse.ofFailure("처리 중 오류 발생: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
 
+
+    }
 }

@@ -10,6 +10,5 @@ public class UserUpdateRequest { //마이페이지 내정보 수정시 사용
 
     private String nickname;
     private List<Genre> favoriteGenre;
-    private String profileImageUrl;
     private String content;
 }

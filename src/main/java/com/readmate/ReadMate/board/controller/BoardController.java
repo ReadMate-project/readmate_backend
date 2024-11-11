@@ -1,5 +1,7 @@
 package com.readmate.ReadMate.board.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.readmate.ReadMate.board.dto.*;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
@@ -21,12 +23,15 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -53,136 +58,168 @@ public class BoardController {
     @PostMapping
     @Operation(summary = "게시물 작성", description = "게시물 작성 API")
     @Transactional // 문제 발생 시 롤백 위해
-    public ResponseEntity<BasicResponse<Board>> createBoard(@RequestBody BoardRequest boardRequest,
-                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<BasicResponse<Board>> createBoard(
+            @RequestPart("boardRequest") String boardRequestJson,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        if (userDetails == null || userDetails.getUser() == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            BoardRequest boardRequest = objectMapper.readValue(boardRequestJson, BoardRequest.class);
 
-        // 게시판에 따른 권한 체크
-        BoardType boardType = boardRequest.getBoardType();
-        BookClubMember member = null;
+            if (userDetails == null || userDetails.getUser() == null) {
+                throw new CustomException(ErrorCode.UNAUTHORIZED);
+            }
 
-        switch (boardType) {
-            case BOARD:
-                boardRequest.setBookId(null);
-                boardRequest.setBookclubId(null);
-                break;
+            // 게시판에 따른 권한 체크
+            BoardType boardType = boardRequest.getBoardType();
+            BookClubMember member = null;
 
-            case FEED:
-                // 피드는 무조건 책이 선정되어야 함 -> 챌린지 인증을 위해
-                if (boardRequest.getBookId() == null) {
-                    throw new CustomException(ErrorCode.INVALID_REQUEST);
-                }
+            switch (boardType) {
+                case BOARD:
+                    boardRequest.setBookId(null);
+                    boardRequest.setBookclubId(null);
+                    break;
 
-                // 챌린지 인증을 위한 북클럽 ID가 있는 경우
-                if (boardRequest.getBookclubId() != null) {
+                case FEED:
+                    // 피드는 무조건 책이 선정되어야 함 -> 챌린지 인증을 위해
+                    if (boardRequest.getBookId() == null) {
+                        throw new CustomException(ErrorCode.INVALID_REQUEST);
+                    }
+
+                    // 챌린지 인증을 위한 북클럽 ID가 있는 경우
+                    if (boardRequest.getBookclubId() != null) {
+                        try {
+                            // 북클럽 멤버 여부 확인
+                            member = bookClubMemberService.findApprovedMember(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
+                        } catch (CustomException e) {
+                            throw new CustomException(ErrorCode.FORBIDDEN);
+                        }
+                    }
+                    break;
+
+                case CLUB_BOARD:
                     try {
                         // 북클럽 멤버 여부 확인
-                        member = bookClubMemberService.findApprovedMember(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
+                        System.out.println("User ID: " + userDetails.getUser().getUserId() + "BookClub ID:" + boardRequest.getBookclubId());
+
+                        bookClubMemberService.findApprovedMember(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
+                        boardRequest.setBookId(null);
                     } catch (CustomException e) {
                         throw new CustomException(ErrorCode.FORBIDDEN);
                     }
-                }
-                break;
+                    break;
 
-            case CLUB_BOARD:
+                case NOTICE:
+                    // 공지사항 작성 시 북클럽 리더 확인!
+                    if (boardRequest.getBookclubId() == null) {
+                        throw new CustomException(ErrorCode.INVALID_REQUEST); // 북클럽 ID는 필수
+                    }
+                    validateLeader(boardRequest.getBookclubId(), userDetails);
+                    break;
+
+                default:
+                    throw new CustomException(ErrorCode.INVALID_REQUEST);
+            }
+
+            Board board = new Board();
+            board.setUserId(userDetails.getUser().getUserId());
+//            board.setBookId(boardRequest.getBookId().toString());
+            board.setBookclubId(boardRequest.getBookclubId());
+            board.setContent(boardRequest.getContent());
+            board.setCreatedAt(LocalDateTime.now());
+            board.setTitle(boardRequest.getTitle());
+            board.setBoardType(boardType);
+
+            // 게시물 저장
+            Board savedBoard = boardService.saveBoard(userDetails, board);
+
+            if (images != null && !images.isEmpty()) {
                 try {
-                    // 북클럽 멤버 여부 확인
-                    System.out.println("User ID: "+userDetails.getUser().getUserId()+ "BookClub ID:"+ boardRequest.getBookclubId());
-
-                    bookClubMemberService.findApprovedMember(boardRequest.getBookclubId(), userDetails.getUser().getUserId());
-                    boardRequest.setBookId(null);
-                } catch (CustomException e) {
-                    throw new CustomException(ErrorCode.FORBIDDEN);
+                    imageService.uploadImages(savedBoard.getBoardId(), images);
+                } catch (IOException e) {
+                    throw new CustomException(ErrorCode.FILE_UPLOAD_FAIL);
                 }
-                break;
+            }
 
-            case NOTICE:
-                // 공지사항 작성 시 북클럽 리더 확인!
-                if (boardRequest.getBookclubId() == null) {
-                    throw new CustomException(ErrorCode.INVALID_REQUEST); // 북클럽 ID는 필수
-                }
-                validateLeader(boardRequest.getBookclubId(), userDetails);
-                break;
+            // 챌린지 인증 미션 완료 처리 (bookclubId가 있는 경우)
+            if (boardType == BoardType.FEED && boardRequest.getBookclubId() != null) {
+                Long dailyMissionId = boardRequest.getDailyMissionId();
+                bookClubMissionService.completeMission(dailyMissionId, userDetails.getUser().getUserId(), savedBoard.getBoardId());
+            }
 
-            default:
-                throw new CustomException(ErrorCode.INVALID_REQUEST);
+            BasicResponse<Board> response = BasicResponse.ofCreateSuccess(savedBoard);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+        } catch (JsonProcessingException e) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.FILE_UPLOAD_FAIL);
         }
-
-
-        Board board = new Board();
-        board.setUserId(userDetails.getUser().getUserId());
-        board.setBookId(boardRequest.getBookId().toString());
-        board.setBookclubId(boardRequest.getBookclubId());
-        board.setContent(boardRequest.getContent());
-        board.setCreatedAt(LocalDateTime.now());
-        board.setTitle(boardRequest.getTitle());
-        board.setBoardType(boardType);
-
-
-    // 게시물 저장
-        Board savedBoard = boardService.saveBoard(userDetails, board);
-
-    // 챌린지 인증 미션 완료 처리 (bookclubId가 있는 경우)
-        if (boardType == BoardType.FEED && boardRequest.getBookclubId() != null) {
-            Long dailyMissionId = boardRequest.getDailyMissionId();
-            bookClubMissionService.completeMission(dailyMissionId, userDetails.getUser().getUserId(), savedBoard.getBoardId());
-        }
-
-
-        BasicResponse<Board> response = BasicResponse.ofCreateSuccess(savedBoard);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
 
 
+
     //1.게시판 수정
+    // 1.게시판 수정
     @PatchMapping("/{boardId}")
     @Operation(summary = "게시물 수정", description = "게시물 수정 API")
     public ResponseEntity<BasicResponse<Board>> updateBoard(
             @PathVariable("boardId") Long boardId,
-            @RequestBody BoardUpdateRequest updateRequest,
+            @RequestPart(value = "updateRequest", required = false) String updateRequestJson,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        if (userDetails == null || userDetails.getUser() == null) {
-            BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
-            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
-        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            BoardUpdateRequest updateRequest = null;
 
-        Optional<Board> optionalBoard = boardService.findBoardById(boardId);
+            // JSON 문자열이 있을 경우에만 객체로 변환
+            if (updateRequestJson != null && !updateRequestJson.isEmpty()) {
+                updateRequest = objectMapper.readValue(updateRequestJson, BoardUpdateRequest.class);
+            }
 
-        if (optionalBoard.isPresent()) {
+            if (userDetails == null || userDetails.getUser() == null) {
+                throw new CustomException(ErrorCode.UNAUTHORIZED);
+            }
 
-            Board board = optionalBoard.get(); //해당 게시물을 가지고옴
+            Optional<Board> optionalBoard = boardService.findBoardById(boardId);
+
+            if (optionalBoard.isEmpty()) {
+                throw new CustomException(ErrorCode.NOT_FOUND);
+            }
+
+            Board board = optionalBoard.get();
 
             if (!board.getUserId().equals(userDetails.getUser().getUserId())) {
-                BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("해당 게시물에 대한 수정 권한이 없습니다.", HttpStatus.FORBIDDEN.value());
-                return new ResponseEntity<>(errorResponseWrapper, HttpStatus.FORBIDDEN);
+                throw new CustomException(ErrorCode.FORBIDDEN);
             }
 
-            if (updateRequest.getBookId() != null) {
-                board.setBookId(updateRequest.getBookId().toString());
-            }
-            if (updateRequest.getBookclubId() != null) {
-                board.setBookclubId(updateRequest.getBookclubId());
-            }
-            if (updateRequest.getContent() != null) {
-                board.setContent(updateRequest.getContent());
-            }
-            if (updateRequest.getTitle() != null) {
-                board.setTitle(updateRequest.getTitle());
+            if (updateRequest != null) {
+                if (updateRequest.getBookclubId() != null) {
+                    board.setBookclubId(updateRequest.getBookclubId());
+                }
+                if (updateRequest.getContent() != null) {
+                    board.setContent(updateRequest.getContent());
+                }
+                if (updateRequest.getTitle() != null) {
+                    board.setTitle(updateRequest.getTitle());
+                }
             }
 
-            Board updatedBoard = boardService.saveBoard(userDetails,board);
+            if (images != null && !images.isEmpty()) {
+                imageService.updateImages(board.getBoardId(), images);
+            }
+
+            Board updatedBoard = boardService.saveBoard(userDetails, board);
             BasicResponse<Board> response = BasicResponse.ofSuccess(updatedBoard);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
 
-            return new ResponseEntity<>(response, HttpStatus.OK);
-
-        } else {
-            BasicResponse<Board> errorResponseWrapper = BasicResponse.ofError("게시물이 존재하지 않습니다.", HttpStatus.NOT_FOUND.value());
-            return new ResponseEntity<>(errorResponseWrapper, HttpStatus.NOT_FOUND);
+        } catch (JsonProcessingException e) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.FILE_UPLOAD_FAIL);
         }
     }
 
