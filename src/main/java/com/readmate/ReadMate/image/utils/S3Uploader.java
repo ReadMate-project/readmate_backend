@@ -1,5 +1,6 @@
 package com.readmate.ReadMate.image.utils;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
@@ -15,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,6 +74,16 @@ public class S3Uploader {
     }
 
     public void deleteFile(String fileName) {
-        amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, fileName));
+        try {
+            String decodedFileName = URLDecoder.decode("profile-images/" + fileName, StandardCharsets.UTF_8.name());
+
+            // S3에서 파일 삭제
+            amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, decodedFileName));
+        } catch (AmazonServiceException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 }

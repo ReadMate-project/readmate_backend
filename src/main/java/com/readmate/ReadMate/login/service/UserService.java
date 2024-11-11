@@ -2,6 +2,7 @@ package com.readmate.ReadMate.login.service;
 
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import com.nimbusds.jose.shaded.gson.JsonParser;
+import com.readmate.ReadMate.image.utils.S3Uploader;
 import com.readmate.ReadMate.login.dto.res.KakaoTokenResponse;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.RefreshTokenRepository;
@@ -10,10 +11,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Optional;
 
 
@@ -24,6 +32,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final S3Uploader s3Uploader;
 
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
@@ -96,6 +105,7 @@ public class UserService {
 
         throw new RuntimeException("유저의 정보가 없습니다.");
     }
+
 
 
     // 회원가입 (카카오에서 받은 정보를 DB에 저장)
@@ -188,4 +198,22 @@ public class UserService {
         if(!userRepository.existsById(id)){
             throw new RuntimeException("유저를 찾을 수 없습니다.");
         };}
+
+    // 유저 정보 수정 -> 유저 프로필 이미지 관련 (S3)
+    @Transactional
+    public String updateUserProfileImage(User user,  MultipartFile profileImage) throws IOException {
+        // 기존 프로필 이미지가 있을 경우 S3에서 삭제
+        if (user.getProfileImageUrl() != null) {
+            String existingFileName = extractFileName(user.getProfileImageUrl());
+            s3Uploader.deleteFile(existingFileName);
+        }
+
+        // 새 이미지 URL로부터 파일을 다운로드하여 S3에 업로드
+        String newImageUrl = s3Uploader.uploadFiles(profileImage, "profile-images");
+        return newImageUrl;
+    }
+
+    private String extractFileName(String imageUrl) {
+        return imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+    }
 }
