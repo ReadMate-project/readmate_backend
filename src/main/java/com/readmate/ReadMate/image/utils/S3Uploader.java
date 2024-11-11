@@ -73,17 +73,19 @@ public class S3Uploader {
         return Optional.empty();
     }
 
-    public void deleteFile(String fileName) {
+    public void deleteFile(String directory, String fileName) {
         try {
-            String decodedFileName = URLDecoder.decode("profile-images/" + fileName, StandardCharsets.UTF_8.name());
+            String decodedFileName = URLDecoder.decode(directory + "/" + fileName, StandardCharsets.UTF_8.name());
 
             // S3에서 파일 삭제
             amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, decodedFileName));
+            System.out.println("S3로부터 파일 삭제 성공: " + decodedFileName);
         } catch (AmazonServiceException e) {
-            e.printStackTrace();
+            System.err.println("S3로부터 파일 삭제 실패: " + e.getErrorMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
 }

@@ -205,7 +205,7 @@ public class UserService {
         // 기존 프로필 이미지가 있을 경우 S3에서 삭제
         if (user.getProfileImageUrl() != null) {
             String existingFileName = extractFileName(user.getProfileImageUrl());
-            s3Uploader.deleteFile(existingFileName);
+            s3Uploader.deleteFile("profile-images/" ,existingFileName);
         }
 
         // 새 이미지 URL로부터 파일을 다운로드하여 S3에 업로드

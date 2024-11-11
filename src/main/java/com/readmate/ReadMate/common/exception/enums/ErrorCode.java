@@ -27,6 +27,7 @@ public enum ErrorCode {
     ACCESS_DENIED(403, "ROLE001", "접근 권한이 없습니다."),
 
     // BOARD
+    NOT_FOUND(404, "COMMON001", "요청한 리소스를 찾을 수 없습니다."),
     INVALID_BOARD(404, "BOARD001", "존재하지 않는 게시물입니다."),
     ACTIVE_BOARD(403, "BOARD002", "삭제되지 않은 게시물입니다. 복구할 필요 없습니다."),
     ALREADY_LIKED(409, "LIKE001", "이미 좋아요를 누른 게시물입니다."),
