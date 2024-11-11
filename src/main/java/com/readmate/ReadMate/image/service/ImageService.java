@@ -24,16 +24,16 @@ public class ImageService {
     private final BoardRepository boardRepository;
 
     @Transactional
-    public List<Image> uploadImages(Long postId, List<MultipartFile> images) throws IOException {
+    public List<Image> uploadImages(Long boardId, List<MultipartFile> images) throws IOException {
 
-        boardRepository.findById(postId)
+        boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
         List<Image> savedImages = images.stream().map(image -> {
             try {
                 String imageUrl = s3Uploader.uploadFiles(image, "uploads");
                 Image newImage = new Image();
-                newImage.setBoardId(postId);
+                newImage.setBoardId(boardId);
                 newImage.setImageUrl(imageUrl);
                 return imageRepository.save(newImage);
             } catch (IOException e) {
@@ -53,7 +53,7 @@ public class ImageService {
         for (Image image : images) {
             // S3에서 이미지 삭제
             String fileName = extractFileName(image.getImageUrl());
-            s3Uploader.deleteFile(fileName);
+            s3Uploader.deleteFile("uploads", fileName);
 
             // DB에서 이미지 삭제
             imageRepository.delete(image);
@@ -67,24 +67,27 @@ public class ImageService {
 
 
     @Transactional
-    public Image updateImage(Long imageId, MultipartFile newImage) throws IOException {
-        Image existingImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
+    public List<Image> updateImages(Long boardId, List<MultipartFile> newImages) throws IOException {
+        List<Image> existingImages = imageRepository.findByBoardId(boardId);
 
+        for (Image image : existingImages) {
+            // S3에서 이미지 삭제
+            String fileName = extractFileName(image.getImageUrl());
+            s3Uploader.deleteFile("uploads", fileName);
 
-        s3Uploader.deleteFile(existingImage.getImageUrl());
-        String newImageUrl = s3Uploader.uploadFiles(newImage, "uploads");
-        existingImage.setImageUrl(newImageUrl);
+            // DB에서 이미지 삭제
+            imageRepository.delete(image);
+        }
 
-        return imageRepository.save(existingImage);
-    }
+        List<Image> savedImages = new ArrayList<>();
+        for (MultipartFile newImage : newImages) {
+            String imageUrl = s3Uploader.uploadFiles(newImage, "uploads");
+            Image newImageEntity = new Image();
+            newImageEntity.setBoardId(boardId);
+            newImageEntity.setImageUrl(imageUrl);
+            savedImages.add(imageRepository.save(newImageEntity));
+        }
 
-    @Transactional
-    public void deleteImage(Long imageId) {
-        Image image = imageRepository.findById(imageId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
-
-        s3Uploader.deleteFile(image.getImageUrl());
-        imageRepository.delete(image);
+        return savedImages;
     }
 }
