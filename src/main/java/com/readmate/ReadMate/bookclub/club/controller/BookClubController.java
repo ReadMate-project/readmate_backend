@@ -50,11 +50,12 @@ public class BookClubController {
 
     @GetMapping()
     @Operation(summary = "북클럽 리스트 조회", description = "북클럽 리스트 조회합니다")
-    public  ResponseEntity<?> getClubList(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "5") int size) {
+    public  ResponseEntity<?> getClubList(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "5") int size,
+                                          @RequestParam(value="status", required = false,defaultValue = "전체")String status) {
 
         Pageable pageable = PageRequest.of(page-1, size);
 
-        Page<BookClubListResponse> bookClubPage = bookClubService.getClubList(pageable);
+        Page<BookClubListResponse> bookClubPage = bookClubService.getClubList(status, pageable);
         PageInfo pageInfo = new PageInfo(
                 bookClubPage.getNumber(),
                 bookClubPage.getSize(),

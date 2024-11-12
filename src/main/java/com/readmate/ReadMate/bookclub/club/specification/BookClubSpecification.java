@@ -4,6 +4,7 @@ import com.readmate.ReadMate.bookclub.club.entity.BookClub;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class BookClubSpecification {
@@ -30,4 +31,27 @@ public class BookClubSpecification {
             return root.get("bookClubId").in(bookClubIds);
         };
     }
+
+    // 삭제되지 않은 북클럽 필터
+    public static Specification<BookClub> withDelYnFalse(){
+        return ((root, query, criteriaBuilder) -> criteriaBuilder.isFalse(root.get("delYn")));
+    }
+
+    // 모집중 필터
+    public static Specification<BookClub> isRecruiting(LocalDate today){
+        System.out.println("모집중인 북클럽 조회 ");
+        return(root ,query, criteriaBuilder)->criteriaBuilder.and(
+                criteriaBuilder.lessThanOrEqualTo(root.get("recruitmentStartDate"),today),
+                criteriaBuilder.greaterThanOrEqualTo(root.get("recruitmentEndDate"),today)
+        );
+    }
+    // 진행중 필터
+    public static Specification<BookClub> isInProgress(LocalDate today){
+        System.out.println("진행중인 북클럽 조회 ");
+        return(root ,query, criteriaBuilder)->criteriaBuilder.and(
+                criteriaBuilder.lessThanOrEqualTo(root.get("startDate"),today),
+                criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"),today)
+        );
+    }
+
 }
