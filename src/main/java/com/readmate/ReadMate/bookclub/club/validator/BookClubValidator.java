@@ -48,6 +48,5 @@ public class BookClubValidator {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }
-
     }
 

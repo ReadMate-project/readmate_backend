@@ -24,6 +24,8 @@
     import com.readmate.ReadMate.login.service.UserService;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
+    import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.Pageable;
     import org.springframework.data.domain.Sort;
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
@@ -141,21 +143,19 @@
         }
 
         // 북클럽 리스트 조회
-        public List<BookClubListResponse> getClubList() {
-            List<BookClub> bookClubs = bookClubRepository.findAllByDelYnFalse();
+        public Page<BookClubListResponse> getClubList(Pageable pageable) {
+            Page<BookClub> bookClubs = bookClubRepository.findAllByDelYnFalse(pageable);
 
-            return bookClubs.stream()
-                    .map(bookClub -> BookClubListResponse.builder()
-                            .bookClubID(bookClub.getBookClubId())
-                            .bookClubName(bookClub.getBookClubName())
-                            .description(bookClub.getDescription())
-                            .startDate(bookClub.getStartDate())
-                            .endDate(bookClub.getEndDate())
-                            .recruitmentStartDate(bookClub.getRecruitmentStartDate())
-                            .recruitmentEndDate(bookClub.getRecruitmentEndDate())
-                            .bookCover(getCurrentChallengeBookCover(LocalDate.now(), bookClub.getBookClubId()))
-                            .build())
-                    .toList();
+            return bookClubs.map(bookClub -> BookClubListResponse.builder()
+                    .bookClubID(bookClub.getBookClubId())
+                    .bookClubName(bookClub.getBookClubName())
+                    .description(bookClub.getDescription())
+                    .startDate(bookClub.getStartDate())
+                    .endDate(bookClub.getEndDate())
+                    .recruitmentStartDate(bookClub.getStartDate())
+                    .recruitmentEndDate(bookClub.getEndDate())
+                    .bookCover(getCurrentChallengeBookCover(bookClub.getBookClubId()))
+                    .build());
         }
 
         // 북클럽 세부 조회
@@ -187,14 +187,12 @@
         }
 
         // 활성 챌린지 가져오기
-        public String getCurrentChallengeBookCover(LocalDate currentDate, Long bookClubId) {
+        public String getCurrentChallengeBookCover( Long bookClubId) {
             BookClubResponse bookClub = findById(bookClubId);
             List<BookClubChallenge> challenges = bookClubChallengeRepository.findAllByBookClubId(bookClubId);
 
             // 현재 활성화된 챌린지 찾기
             return challenges.stream()
-                    .filter(challenge -> !challenge.getStartDate().isAfter(currentDate) &&
-                            !challenge.getEndDate().isBefore(currentDate))
                     .findFirst()
                     .map(challenge -> bookService.getBookByIsbn(challenge.getIsbn13()).getBookCover())
                     .orElse(null);

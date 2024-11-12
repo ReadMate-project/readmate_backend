@@ -11,6 +11,7 @@ import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMember;
 import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMemberRole;
 import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.bookclub.dailyMission.service.BookClubMissionService;
+import com.readmate.ReadMate.common.dto.PageInfo;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.common.message.BasicResponse;
@@ -23,7 +24,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -124,7 +124,7 @@ public class BoardController {
 
             Board board = new Board();
             board.setUserId(userDetails.getUser().getUserId());
-            board.setBookId(boardRequest.getBookId().toString());
+//            board.setBookId(boardRequest.getBookId());
             board.setBookclubId(boardRequest.getBookclubId());
             board.setContent(boardRequest.getContent());
             board.setCreatedAt(LocalDateTime.now());
@@ -292,7 +292,8 @@ public class BoardController {
                 boardPage.getTotalPages()
         );
 
-        BasicResponse<List<Board>> response = BasicResponse.ofSuccess(boardPage.getContent(), pageInfo);
+
+        BasicResponse<List<Board>> response = BasicResponse.ofSuccessWithPageInfo(boardPage.getContent(), pageInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -347,7 +348,7 @@ public class BoardController {
                 boardPage.getTotalPages()
         );
 
-        BasicResponse<List<Board>> response = BasicResponse.ofSuccess(boardPage.getContent(), pageInfo);
+        BasicResponse<List<Board>> response = BasicResponse.ofSuccessWithPageInfo(boardPage.getContent(), pageInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
