@@ -15,10 +15,10 @@ public interface MyBookRepository extends JpaRepository<MyBook,Long> {
     List<MyBook> findByUserIdAndDelYnFalse(Long userId);
 
     // userId와 isbn13을 사용하여 특정 책을 조회, 삭제하지 않은 상태
-    MyBook findByUserIdAndIsbn13AndDelYnFalse(Long userId, String isbn13);
+    MyBook findByUserIdAndIsbn13AndDelYnFalse(Long userId, Long isbn13);
 
     // userId와 isbn13을 사용하여 특정 책을 조회
-    MyBook findByUserIdAndIsbn13(Long userId, String isbn13);
+    MyBook findByUserIdAndIsbn13(Long userId, Long isbn13);
 
 
 }

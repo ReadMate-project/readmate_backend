@@ -1,6 +1,8 @@
 package com.readmate.ReadMate.bookclub.club.repository;
 
 import com.readmate.ReadMate.bookclub.club.entity.BookClub;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -12,7 +14,7 @@ public interface BookClubRepository extends JpaRepository<BookClub,Long>, JpaSpe
 
     boolean existsByBookClubName(String clubName);
 
-    List<BookClub> findAllByDelYnFalse();
+    Page<BookClub> findAllByDelYnFalse(Pageable pageable);
 
     boolean existsByBookClubId(final long bookClubId);
 }

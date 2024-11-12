@@ -27,6 +27,6 @@ public class DailyMissionCompletion {
     private Long userId; // 미션을 완료한 멤버
 
     @Column(name = "completed_date")
-    private LocalDateTime completionDate; // 미션 완료 날짜
+    private LocalDate completionDate; // 미션 완료 날짜
 
 }

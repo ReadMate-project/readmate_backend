@@ -11,7 +11,7 @@ import org.w3c.dom.Text;
 @Setter
 public class BookResponse {
 
-    private String isbn13;
+    private Long isbn13;
 
     private String title;
 

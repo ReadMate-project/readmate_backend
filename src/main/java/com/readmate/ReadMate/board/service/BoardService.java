@@ -112,7 +112,6 @@ public class BoardService {
 
         boardList.forEach(board -> {
             String date = board.getCreatedAt().toLocalDate().toString();
-            System.out.println("board.getBookId() = " + board.getBookId());
             Book book = bookRepository.findByIsbn13(board.getBookId())
                     .orElseThrow(() -> new CustomException(ErrorCode.BOOK_NOT_FOUND)); // 책 정보 가져오기
 

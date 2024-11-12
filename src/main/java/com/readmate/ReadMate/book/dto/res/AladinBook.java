@@ -10,7 +10,7 @@ public class AladinBook {
     private String author;
     private String description;
     private String isbn;
-    private String isbn13;
+    private Long isbn13;
     private String publisher;
     private Long itemPage;
     private String cover;

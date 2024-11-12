@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class MVPResponse {
     private Long boardId;
-    private String bookId;
+    private Long bookId;
     private String title;
     private String content;
     private Long userId;

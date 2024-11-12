@@ -3,6 +3,7 @@ package com.readmate.ReadMate.bookclub.club.dto.res;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.readmate.ReadMate.bookclub.bookClubChallenge.dto.BookClubChallengeResponse;
 import com.readmate.ReadMate.bookclub.club.entity.BookClub;
+import com.readmate.ReadMate.common.genre.Genre;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,7 @@ public class BookClubResponse {
     private String bookClubName;
     private String description;
     private long leaderId;
+    private List<Genre> favoriteGenre;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
@@ -55,5 +57,6 @@ public class BookClubResponse {
         this.recruitmentEndDate = bookClub.getRecruitmentEndDate();
         this.recruitmentStartDate = bookClub.getRecruitmentStartDate();
         this.challenges = challenges;
+        this.favoriteGenre = bookClub.getFavoriteGenre();
     }
 }
