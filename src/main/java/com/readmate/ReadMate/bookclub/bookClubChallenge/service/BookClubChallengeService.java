@@ -17,12 +17,15 @@ import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -38,7 +41,7 @@ public class BookClubChallengeService {
     private final BookClubRepository bookClubRepository;
 
 
-    public void createClubChallenge(final long bookClubId, final String  isbn13, LocalDate startDate, LocalDate endDate) {
+    public void createClubChallenge(final long bookClubId, long isbn13, LocalDate startDate, LocalDate endDate) {
         BookClubChallenge bookClubChallenge =  BookClubChallenge
                         .builder()
                         .bookClubId(bookClubId)
@@ -60,8 +63,16 @@ public class BookClubChallengeService {
 
         //2. 북클럽 챌린지에서 챌린지 정보 가져옴 -> 없을 경우 빈 객체 반환
         LocalDate today = LocalDate.now();
-        BookClubChallenge bookClubChallenge = bookClubChallengeRepository.findCurrentChallengeByBookClubIdAndDate(bookClubId, today)
-                .orElseGet(BookClubChallenge::new);
+        Optional<BookClubChallenge> optionalChallenge = bookClubChallengeRepository.findCurrentChallengeByBookClubIdAndDate(bookClubId, today);
+
+        // 만약에 없을 경우 뒤의 로직을 처리하지 않고 빈 객체를 return 하거나 없다고 떠야함.
+        // bookClubChallenge.getBookClubId() = null 인데 여기서 getIsbn13 을 하려고하니 NPE 가 나는 것
+
+        if(optionalChallenge.isEmpty()){
+            return ChallengeResponse.builder().build();
+        }
+
+        BookClubChallenge bookClubChallenge = optionalChallenge.get();
 
         System.out.println("bookClubChallenge.getBookClubId() = " + bookClubChallenge.getBookClubId());
 
@@ -69,8 +80,15 @@ public class BookClubChallengeService {
         BookResponse bookResponse = bookService.getBookByIsbn(bookClubChallenge.getIsbn13());
 
         //4. DailyMission 찾기
-        DailyMission dailyMission = bookClubMissionService
+        Optional<DailyMission> dailyMissionOptionalMission = bookClubMissionService
                 .getByChallengeAndDate(bookClubChallenge.getChallengeId(), today);
+
+        if(dailyMissionOptionalMission.isEmpty()){
+            return ChallengeResponse.builder().build();
+        }
+
+        DailyMission dailyMission = dailyMissionOptionalMission.get();
+
 
         return ChallengeResponse.builder()
                 .missionId(dailyMission.getMissionId())
@@ -84,40 +102,36 @@ public class BookClubChallengeService {
     }
 
     // 유저가 참여중인 미션 조회
+    @Transactional(readOnly = true)
     public List<UserMissionResponse> getUserChallenge(final long userId) {
 
         List<Long> bookClubIds = bookClubMemberService.findBookClubIdsByUserId(userId);
         LocalDate today = LocalDate.now();
 
-    // 2. 북클럽 내 오늘의 Mission 조회 및 UserMissionResponse 생성
+        // 북클럽 내 오늘의 Mission 조회 및 UserMissionResponse 생성
         return bookClubIds.stream()
                 .map(bookClubId -> {
                     // bookClubId로 BookClub 정보를 가져옴
                     BookClub bookClub = bookClubRepository.findById(bookClubId)
-                            .orElseThrow( () ->  new CustomException(ErrorCode.INVALID_CLUB));
-
-                    System.out.println("bookClub.getBookClubId()+today = " + bookClub.getBookClubId()+today);
-
+                            .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
 
                     // 해당 bookClubId로 오늘의 Challenge 조회
-                    BookClubChallenge bookClubChallenge = bookClubChallengeRepository
-                            .findCurrentChallengeByBookClubIdAndDate(bookClub.getBookClubId(), today)
-                            .orElseGet(BookClubChallenge::new);
+                    Optional<BookClubChallenge> optionalBookClubChallenge = bookClubChallengeRepository
+                            .findCurrentChallengeByBookClubIdAndDate(bookClub.getBookClubId(), today);
 
-                    System.out.println("bookClubChallenge.getIsbn13() = " + bookClubChallenge.getIsbn13());
-
-                    if (bookClubChallenge != null) {
-                        System.out.println("isbn13: " + bookClubChallenge.getIsbn13());
-                    } else {
-                        System.out.println("Challenge not found or isbn13 is null.");
+                    if (optionalBookClubChallenge.isEmpty()) {
+                        return null;
                     }
+
+                    BookClubChallenge bookClubChallenge = optionalBookClubChallenge.get();
 
                     // Challenge에 대한 도서 정보 조회
                     BookResponse bookResponse = bookService.getBookByIsbn(bookClubChallenge.getIsbn13());
 
                     // 오늘 날짜의 DailyMission 조회
                     DailyMission dailyMission = bookClubMissionService
-                            .getByChallengeAndDate(bookClubChallenge.getChallengeId(), today);
+                            .getByChallengeAndDate(bookClubChallenge.getChallengeId(), today)
+                            .orElseThrow(() -> new CustomException(ErrorCode.INVALID_MISSION));
 
                     // UserMissionResponse 생성
                     return UserMissionResponse.builder()
@@ -130,44 +144,49 @@ public class BookClubChallengeService {
                             .bookCover(bookResponse.getBookCover()) // 도서 표지
                             .build();
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+
 
 
     @Transactional
     public void scheduleService(){
         LocalDate today = LocalDate.now();
 
+        // 삭제되지 않은 모든 BookClubChallenge를 가져옵니다.
         List<BookClubChallenge> bookClubChallenges = bookClubChallengeRepository.findAllByDelYnFalse();
 
-        if(bookClubChallenges.isEmpty()){
+        if (bookClubChallenges.isEmpty()) {
             return;
         }
 
-        for(BookClubChallenge bookClubChallenge : bookClubChallenges){
+        for (BookClubChallenge bookClubChallenge : bookClubChallenges) {
 
-            DailyMission dailyMission = bookClubMissionService.getByChallengeAndDate(bookClubChallenge.getChallengeId(), today);
+            // 오늘의 DailyMission을 Optional로 가져옵니다.
+            Optional <DailyMission> optionalDailyMission = bookClubMissionService.getByChallengeAndDate(bookClubChallenge.getChallengeId(), today);
+
+            // 오늘의 미션이 없으면 건너뜁니다.
+            if (optionalDailyMission.isEmpty()) {
+                continue;
+            }
+            DailyMission dailyMission = optionalDailyMission.get();
+            // 오늘까지 읽어야 할 페이지 수 (endPage 기준)
             Long todayPage = (long) dailyMission.getEndPage();
 
+            // 도서의 전체 페이지 수
             BookResponse bookResponse = bookService.getBookByIsbn(bookClubChallenge.getIsbn13());
-
             Long totalPage = bookResponse.getTotalPages();
 
-            int percentage = (int) ((todayPage/totalPage)*100);
+            // 오늘까지의 진행률 계산
+            int percentage = (int) ((double) todayPage / totalPage * 100);
 
-            BookClubChallenge updatedChallenge = BookClubChallenge.builder()
-                    .challengeId(bookClubChallenge.getChallengeId())
-                    .bookClubId(bookClubChallenge.getBookClubId())
-                    .isbn13(bookClubChallenge.getIsbn13())
-                    .startDate(bookClubChallenge.getStartDate())
-                    .endDate(bookClubChallenge.getEndDate())
-                    .progressPercentage(percentage)
-                    .build();
-
-            // 업데이트된 객체 저장
-            bookClubChallengeRepository.save(updatedChallenge);
+            // 진행률을 업데이트하여 BookClubChallenge 객체를 새로 저장합니다.
+            bookClubChallenge.setProgressPercentage(percentage);
+            bookClubChallengeRepository.save(bookClubChallenge);  // 수정된 객체 저장
         }
     }
+
 
     // BookClubService- 기존 챌린지 삭제 메서드
     public void deleteChallengesAndMissions(Long bookClubId) {

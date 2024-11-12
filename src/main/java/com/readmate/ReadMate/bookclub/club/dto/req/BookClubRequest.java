@@ -1,6 +1,10 @@
 package com.readmate.ReadMate.bookclub.club.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.readmate.ReadMate.common.genre.Genre;
+import com.readmate.ReadMate.common.genre.GenreConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,6 +23,7 @@ public class BookClubRequest {
     private String description;
     private Long leaderId;
     private List<BookInfoRequest> bookList;
+    private List<Genre> favoriteGenre;
 
     //진행 기간
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")

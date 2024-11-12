@@ -13,7 +13,7 @@ public class Book {
 
     @Id
     @Column(name = "isbn13")
-    private String isbn13;  // ISBN13을 기본 키로 설정
+    private Long isbn13;  // ISBN13을 기본 키로 설정
 
     @Column(name = "book_title")
     private String title;

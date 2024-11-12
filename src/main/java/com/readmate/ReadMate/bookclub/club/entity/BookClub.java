@@ -2,6 +2,8 @@ package com.readmate.ReadMate.bookclub.club.entity;
 
 import com.readmate.ReadMate.bookclub.club.dto.req.BookClubRequest;
 
+import com.readmate.ReadMate.common.genre.Genre;
+import com.readmate.ReadMate.common.genre.GenreConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -73,6 +75,10 @@ public class BookClub {
     @Column(name="created_at")
     private LocalDateTime createdAt;
 
+    @Convert(converter = GenreConverter.class)
+    @Column(name = "favorite_genre")
+    private List<Genre> favoriteGenre;
+
     public void createBookClub(BookClubRequest clubRequest){
         this.setBookClubName(clubRequest.getBookClubName());
         this.setDescription(clubRequest.getDescription());
@@ -81,6 +87,7 @@ public class BookClub {
         this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
         this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
         this.createdAt = LocalDateTime.now();
+        this.setFavoriteGenre(clubRequest.getFavoriteGenre());
     }
 
     public void updateBookClub(BookClubRequest clubRequest){
@@ -91,13 +98,10 @@ public class BookClub {
         this.setEndDate(clubRequest.getEndDate() != null ? clubRequest.getEndDate() : LocalDate.now().plusMonths(1));
         this.setRecruitmentStartDate(clubRequest.getRecruitmentStartDate() != null ? clubRequest.getRecruitmentStartDate() : LocalDate.now());
         this.setRecruitmentEndDate(clubRequest.getRecruitmentEndDate() != null ? clubRequest.getRecruitmentEndDate() : LocalDate.now().plusWeeks(1));
+        this.setFavoriteGenre(clubRequest.getFavoriteGenre());
     }
-
     public void delete(){
         this.delYn = true;
     }
-
-
-
 
 }
