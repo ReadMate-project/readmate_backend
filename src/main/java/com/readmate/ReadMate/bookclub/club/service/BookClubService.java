@@ -220,7 +220,7 @@
         //책 저장 메서드
         private List<Book> saveBooksByIsbn(List<BookInfoRequest> bookInfoRequests) {
             return bookInfoRequests.stream()
-                    .map(bookInfo -> bookService.saveBookByIsbn(bookInfo.getIsbn().toString()))
+                    .map(bookInfo -> bookService.saveBookByIsbn(bookInfo.getIsbn()))
                     .toList();
         }
 

@@ -55,7 +55,7 @@ public class MyBookService {
         }
     }
 
-    public void addBookToMyLibrary(String isbn13, CustomUserDetails userDetails) {
+    public void addBookToMyLibrary(Long isbn13, CustomUserDetails userDetails) {
         Book book = bookService.saveBookByIsbn(isbn13);
 
         if (book == null) {
@@ -82,7 +82,7 @@ public class MyBookService {
     }
 
 
-    public void removeBookFromMyLibrary(String isbn13, CustomUserDetails userDetails) {
+    public void removeBookFromMyLibrary(Long isbn13, CustomUserDetails userDetails) {
         Book book = bookRepository.findByIsbn13(isbn13)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOOK_NOT_FOUND));
 

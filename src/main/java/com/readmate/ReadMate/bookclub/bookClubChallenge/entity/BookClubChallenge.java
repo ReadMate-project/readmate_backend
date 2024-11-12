@@ -36,7 +36,7 @@ public class BookClubChallenge {
 
     // Book 엔티티의 isbn13을 참조하도록 변경
     @Column(name = "isbn13", nullable = false)
-    private String isbn13;
+    private Long isbn13;
 
     private int progressPercentage;
 
@@ -46,7 +46,7 @@ public class BookClubChallenge {
 
     @Builder
     public BookClubChallenge(Long challengeId, Long bookClubId, LocalDate startDate,
-                             LocalDate endDate, String  isbn13, int progressPercentage) {
+                             LocalDate endDate, Long  isbn13, int progressPercentage) {
         this.challengeId = challengeId;
         this.bookClubId = bookClubId;
         this.startDate = startDate;

@@ -1,6 +1,5 @@
 package com.readmate.ReadMate.board.entity;
 
-import com.readmate.ReadMate.common.formatter.DateFormatter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,7 +28,7 @@ public class Board {
     private BoardType boardType;
 
     @Column(name = "book_id")
-    private String bookId;
+    private Long bookId;
 
     @Column(name = "bookclub_id") //CLUB_BOARD 때문에
     private Long bookclubId;

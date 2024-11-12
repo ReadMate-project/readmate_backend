@@ -52,7 +52,7 @@ public class BookService {
      * @param isbn13
      * @return Book
      */
-    public Book saveBookByIsbn(String isbn13) {
+    public Book saveBookByIsbn(Long isbn13) {
 
         //  1. 데이터 베이스에서 책 조회
         Book existingBook = bookRepository.findByIsbn13(isbn13).orElse(null);
@@ -86,7 +86,7 @@ public class BookService {
             String title = bookInfo.getTitle();
             String author = bookInfo.getAuthor();
             String description = bookInfo.getDescription();
-            String isbn13Str = bookInfo.getIsbn13();
+            Long isbn13Str = bookInfo.getIsbn13();
             String publisher = bookInfo.getPublisher();
             String coverUrl = bookInfo.getCover();
             String categoryName = bookInfo.getCategoryName();
@@ -122,7 +122,7 @@ public class BookService {
     /**
      * Book ISBN13으로 조회하기
      */
-    public BookResponse getBookByIsbn(String isbn13) {
+    public BookResponse getBookByIsbn(Long isbn13) {
         Book book = bookRepository.findByIsbn13(isbn13)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOOK));
 

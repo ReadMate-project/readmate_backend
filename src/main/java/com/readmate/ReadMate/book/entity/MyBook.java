@@ -27,7 +27,7 @@ public class MyBook {
     private Long userId;  // 어떤 사용자인지 저장
 
     @Column(name = "isbn13", nullable = false)
-    private String isbn13;  // Book 엔티티의 isbn13을 참조
+    private Long isbn13;  // Book 엔티티의 isbn13을 참조
 
     @Column(name = "last_read_date")
     private LocalDate lastReadDate;

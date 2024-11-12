@@ -40,7 +40,7 @@ public class BookClubChallengeService {
     private final BookClubRepository bookClubRepository;
 
 
-    public void createClubChallenge(final long bookClubId, final String  isbn13, LocalDate startDate, LocalDate endDate) {
+    public void createClubChallenge(final long bookClubId, long isbn13, LocalDate startDate, LocalDate endDate) {
         BookClubChallenge bookClubChallenge =  BookClubChallenge
                         .builder()
                         .bookClubId(bookClubId)

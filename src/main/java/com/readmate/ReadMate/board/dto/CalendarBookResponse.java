@@ -12,10 +12,10 @@ public class CalendarBookResponse {
 
     @Getter
     public static class BookInfo {
-        private String isbnId;
+        private Long isbnId;
         private String bookCoverUrl;
 
-        public BookInfo(String isbnId, String bookCoverUrl) {
+        public BookInfo(Long isbnId, String bookCoverUrl) {
             this.isbnId = isbnId;
             this.bookCoverUrl = bookCoverUrl;
         }

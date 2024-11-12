@@ -13,7 +13,7 @@ public class BookRequest {
 
     private String title;
     private Long totalPages;
-    private String isbn13;
+    private Long isbn13;
     private String bookCover;
     //아래 제거 여부 나중에 논의 예정
     private String author;

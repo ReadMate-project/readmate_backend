@@ -37,7 +37,7 @@ public class MyBookController {
      * 내 서재에 책 추가하기
      */
     @PostMapping
-    public ResponseEntity<BasicResponse<String>> addBookToMyLibrary(@RequestParam String isbn13, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<BasicResponse<String>> addBookToMyLibrary(@RequestParam Long isbn13, @AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null || userDetails.getUser() == null) {
             BasicResponse<String> errorResponse = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
@@ -51,7 +51,7 @@ public class MyBookController {
      * 내 서재에 책 제거하기
      */
     @DeleteMapping
-    public ResponseEntity<BasicResponse<String>> removeBookFromMyLibrary(@RequestParam String isbn13, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<BasicResponse<String>> removeBookFromMyLibrary(@RequestParam final long isbn13, @AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null || userDetails.getUser() == null) {
             BasicResponse<String> errorResponse = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
