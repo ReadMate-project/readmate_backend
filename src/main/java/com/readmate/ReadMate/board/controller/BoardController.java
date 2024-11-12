@@ -124,8 +124,8 @@ public class BoardController {
 
             Board board = new Board();
             board.setUserId(userDetails.getUser().getUserId());
-//            board.setBookId(boardRequest.getBookId());
-            board.setBookclubId(boardRequest.getBookclubId());
+            board.setBookId(boardRequest.getBookId());
+            board.setBookclubId(boardRequest.getBookclubId() );
             board.setContent(boardRequest.getContent());
             board.setCreatedAt(LocalDateTime.now());
             board.setTitle(boardRequest.getTitle());

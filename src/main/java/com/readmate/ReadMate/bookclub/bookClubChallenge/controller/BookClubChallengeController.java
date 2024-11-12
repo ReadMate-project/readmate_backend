@@ -29,7 +29,7 @@ public class BookClubChallengeController {
     /**
      * 오늘의 진행 상황
      */
-    @GetMapping("{bookClubId}")
+    @GetMapping("/{bookClubId}")
     public ResponseEntity<?> getTodayChallenge(@AuthenticationPrincipal @Valid CustomUserDetails userDetails, @PathVariable final long bookClubId) {
         // 유저와 책 클럽 ID를 기반으로 오늘의 미션을 가져옵니다.
         ChallengeResponse challengeResponse = bookClubChallengeService.getClubChallenge(userDetails.getUser().getUserId(), bookClubId);

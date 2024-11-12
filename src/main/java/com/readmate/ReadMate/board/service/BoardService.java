@@ -48,7 +48,7 @@ public class BoardService {
         // 내 서재에 책 추가
         if (board.getBookId() != null) {
             // ISBN13을 사용해 도서 정보를 조회하고, 없으면 Aladin API로 저장
-            Book saveBook = bookService.saveBookByIsbn(board.getBoardId());
+            Book saveBook = bookService.saveBookByIsbn(board.getBookId());
 
             // 해당 책을 사용자의 서재(MyBook)에 추가
 

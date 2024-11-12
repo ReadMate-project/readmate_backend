@@ -7,6 +7,7 @@ import com.readmate.ReadMate.book.dto.res.BookResponse;
 import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.bookclub.bookClubChallenge.dto.MissionPageInfo;
 import com.readmate.ReadMate.bookclub.bookClubChallenge.entity.BookClubChallenge;
+import com.readmate.ReadMate.bookclub.bookClubChallenge.repository.BookClubChallengeRepository;
 import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.bookclub.dailyMission.dto.CompletedUser;
 import com.readmate.ReadMate.bookclub.dailyMission.entity.DailyMission;
@@ -21,9 +22,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -37,11 +38,10 @@ public class BookClubMissionService {
     private final BookClubMemberService bookClubMemberService;
     private final UserService userService;
     private final BoardService boardService;
+    private final BookClubChallengeRepository bookClubChallengeRepository;
 
-    public DailyMission getByChallengeAndDate(final long challengeId, final LocalDate today){
-        return dailyMissionRepository.findByChallengeIdAndMissionDate(challengeId, today)
-                .orElseThrow (()->new CustomException(ErrorCode.INVALID_MISSION));
-
+    public Optional<DailyMission> getByChallengeAndDate(final long challengeId, final LocalDate today){
+        return dailyMissionRepository.findByChallengeIdAndMissionDate(challengeId, today);
     }
 
     public void deleteByChallengeId(final long  challengeId) {
@@ -128,7 +128,7 @@ public class BookClubMissionService {
 
         Board board = boardService.getBoardById(boardId);
 
-        // 해당 유저가 이미 이 미션을 완료했는지 확인
+        // 1. 해당 유저가 이미 이 미션을 완료했는지 확인
         boolean alreadyCompleted = dailyMissionCompletionRepository.existsByDailyMissionIdAndUserId(dailyMissionId, userId);
 
         // 이미 미션을 완료했으면 에러 메시지
@@ -136,9 +136,15 @@ public class BookClubMissionService {
             throw new CustomException(ErrorCode.MISSION_ALREADY_COMPLETED); // 적절한 에러 메시지를 추가
         }
 
-        // DailyMission의 날짜와 게시글의 작성 날짜가 일치하는지 확인
+        // 2. DailyMission의 날짜와 게시글의 작성 날짜가 일치하는지 확인
         if (!dailyMission.getMissionDate().equals(board.getCreatedAt().toLocalDate())) {
             throw new CustomException(ErrorCode.MISSION_DATE_MISMATCH);  // 미션 날짜와 게시글 작성 날짜가 다를 경우 예외 처리
+        }
+
+        // 3. 책이 미션 인증해야하는 책과 일치하는지 확인
+        Optional<BookClubChallenge> bookClubChallenge = bookClubChallengeRepository.findById(dailyMission.getChallengeId());
+        if(!(board.getBookId().equals(bookClubChallenge.get().getIsbn13()))){
+            throw new CustomException(ErrorCode.INVALID_BOOK);
         }
 
         // 미션 완료 처리

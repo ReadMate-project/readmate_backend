@@ -69,10 +69,9 @@ public class BookService {
 
         if (response.getStatusCode().is2xxSuccessful()) {
             AladinBookResponse bookResponse = response.getBody();
-            System.out.println("bookResponse.getItem() = " + bookResponse.getItem());
 
             // Check if the book response is valid
-            if (bookResponse == null || bookResponse.getItem() == null || bookResponse.getItem().isEmpty()) {
+            if (bookResponse.getItem() == null || bookResponse.getItem().isEmpty()) {
                 log.error("Book not found or empty response for ISBN: {}", isbn13);
                 throw new CustomException(ErrorCode.BOOK_NOT_FOUND);
             }
