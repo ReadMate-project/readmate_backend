@@ -124,7 +124,7 @@ public class BoardController {
 
             Board board = new Board();
             board.setUserId(userDetails.getUser().getUserId());
-//            board.setBookId(boardRequest.getBookId().toString());
+            board.setBookId(boardRequest.getBookId().toString());
             board.setBookclubId(boardRequest.getBookclubId());
             board.setContent(boardRequest.getContent());
             board.setCreatedAt(LocalDateTime.now());
@@ -153,8 +153,6 @@ public class BoardController {
 
         } catch (JsonProcessingException e) {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
-        } catch (IOException e) {
-            throw new CustomException(ErrorCode.FILE_UPLOAD_FAIL);
         }
     }
 

@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -60,8 +62,16 @@ public class BookClubChallengeService {
 
         //2. 북클럽 챌린지에서 챌린지 정보 가져옴 -> 없을 경우 빈 객체 반환
         LocalDate today = LocalDate.now();
-        BookClubChallenge bookClubChallenge = bookClubChallengeRepository.findCurrentChallengeByBookClubIdAndDate(bookClubId, today)
-                .orElseGet(BookClubChallenge::new);
+        Optional<BookClubChallenge> optionalChallenge = bookClubChallengeRepository.findCurrentChallengeByBookClubIdAndDate(bookClubId, today);
+
+        // 만약에 없을 경우 뒤의 로직을 처리하지 않고 빈 객체를 return 하거나 없다고 떠야함.
+        // bookClubChallenge.getBookClubId() = null 인데 여기서 getIsbn13 을 하려고하니 NPE 가 나는 것
+
+        if(optionalChallenge.isEmpty()){
+            return ChallengeResponse.builder().build();
+        }
+
+        BookClubChallenge bookClubChallenge = optionalChallenge.get();
 
         System.out.println("bookClubChallenge.getBookClubId() = " + bookClubChallenge.getBookClubId());
 
@@ -98,19 +108,15 @@ public class BookClubChallengeService {
 
                     System.out.println("bookClub.getBookClubId()+today = " + bookClub.getBookClubId()+today);
 
-
                     // 해당 bookClubId로 오늘의 Challenge 조회
-                    BookClubChallenge bookClubChallenge = bookClubChallengeRepository
-                            .findCurrentChallengeByBookClubIdAndDate(bookClub.getBookClubId(), today)
-                            .orElseGet(BookClubChallenge::new);
+                    Optional<BookClubChallenge> optionalBookClubChallenge = bookClubChallengeRepository
+                            .findCurrentChallengeByBookClubIdAndDate(bookClub.getBookClubId(), today);
 
-                    System.out.println("bookClubChallenge.getIsbn13() = " + bookClubChallenge.getIsbn13());
+                   if(optionalBookClubChallenge.isEmpty()){
+                       return null;
+                   }
 
-                    if (bookClubChallenge != null) {
-                        System.out.println("isbn13: " + bookClubChallenge.getIsbn13());
-                    } else {
-                        System.out.println("Challenge not found or isbn13 is null.");
-                    }
+                    BookClubChallenge bookClubChallenge = optionalBookClubChallenge.get();
 
                     // Challenge에 대한 도서 정보 조회
                     BookResponse bookResponse = bookService.getBookByIsbn(bookClubChallenge.getIsbn13());
@@ -130,6 +136,7 @@ public class BookClubChallengeService {
                             .bookCover(bookResponse.getBookCover()) // 도서 표지
                             .build();
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
