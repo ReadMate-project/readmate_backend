@@ -14,7 +14,7 @@ public interface BookClubRepository extends JpaRepository<BookClub,Long>, JpaSpe
 
     boolean existsByBookClubName(String clubName);
 
-    Page<BookClub> findAllByDelYnFalse(Pageable pageable);
+    Page<BookClub> findAllByDelYnFalseOrderByCreatedAtDesc(Pageable pageable);
 
     boolean existsByBookClubId(final long bookClubId);
 }

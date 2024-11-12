@@ -142,7 +142,7 @@
 
         // 북클럽 리스트 조회
         public Page<BookClubListResponse> getClubList(Pageable pageable) {
-            Page<BookClub> bookClubs = bookClubRepository.findAllByDelYnFalse(pageable);
+            Page<BookClub> bookClubs = bookClubRepository.findAllByDelYnFalseOrderByCreatedAtDesc(pageable);
 
             return bookClubs.map(bookClub -> BookClubListResponse.builder()
                     .bookClubID(bookClub.getBookClubId())
