@@ -2,14 +2,38 @@ package com.readmate.ReadMate.common.genre;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@JsonFormat(shape = JsonFormat.Shape.STRING)
 @Getter
+@JsonFormat(shape = JsonFormat.Shape.STRING)
+@RequiredArgsConstructor
 public enum Genre {
 
-    가정, 요리, 뷰티, 건강, 취미, 레저, 고전, 역사, 과학, 기술, 사회과학, 어린이, 청소년,
-    에세이, 자서전, 여행, 예술, 대중문화, 인문학, 철학, 자기계발, 종교, 명상, 컴퓨터, IT,
-    의학, 건축, 디자인, 경제경영, 기타, 소설, 시, 희곡
+    가정요리뷰티(1230),
+    건강취미레저(55890),
+    경제경영(170),
+    고전(2105),
+    과학(987),
+    만화(2551),
+    사회과학(798),
+    문학(1108),
+    에세이(55889),
+    여행(1196),
+    역사(74),
+    예술대중문화(517),
+    외국어(1322),
+    유아(13789),
+    인문학(656),
+    자기계발(336),
+    잡지(2913),
+    장르소설(112011),
+    종교역학(1237),
+    청소년(2030),
+    컴퓨터모바일(351);
 
+    private final int categoryId;
 
+    public int getCategoryId() {
+        return categoryId;
+    }
 }

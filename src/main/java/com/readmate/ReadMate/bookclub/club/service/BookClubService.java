@@ -56,7 +56,6 @@
         private final DailyMissionRepository dailyMissionRepository;
         private final BookClubChallengeRepository bookClubChallengeRepository;
 
-
         public Long createClub(CustomUserDetails userDetails, BookClubRequest clubRequest) {
 
             //북클럽 이름 중복 여부 확인
@@ -84,7 +83,6 @@
 
             return savedBookClub.getBookClubId();
         }
-
 
         public Long updateClub(CustomUserDetails userDetails, Long clubId, BookClubRequest clubRequest) {
 
@@ -155,6 +153,7 @@
                     .recruitmentStartDate(bookClub.getStartDate())
                     .recruitmentEndDate(bookClub.getEndDate())
                     .bookCover(getCurrentChallengeBookCover(bookClub.getBookClubId()))
+                    .favoriteGenre(bookClub.getFavoriteGenre())
                     .build());
         }
 
@@ -238,6 +237,7 @@
                     .recruitmentStartDate(bookClub.getRecruitmentStartDate())
                     .recruitmentEndDate(bookClub.getRecruitmentEndDate())
                     .viewCount(bookClub.getViewCount())
+                    .favoriteGenre(bookClub.getFavoriteGenre())
                     .build();
         }
 
