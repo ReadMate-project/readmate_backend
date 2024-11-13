@@ -75,4 +75,14 @@ public class BookClubController {
         return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubResponse));
     }
 
+    //ISBN13 으로 북클럽 목록 조회
+    @GetMapping("/isbn")
+    @Operation(summary = "북클럽 조회", description = "ISBN13 으로 북클럽 목록을 조회합니다")
+    public ResponseEntity<?> getBookClubByIsbn13(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "5") int size,
+                                                 @RequestParam("bookId") final long bookId) {
+        Pageable pageable = PageRequest.of(page-1, size);
+
+        Page<BookClubListResponse> bookClubResponse = bookClubService.getBookClubByIsbn13(bookId,pageable);
+        return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubResponse));
+    }
 }

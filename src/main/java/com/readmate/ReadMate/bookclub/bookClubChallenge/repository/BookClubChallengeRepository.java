@@ -22,4 +22,6 @@ public interface BookClubChallengeRepository extends JpaRepository<BookClubChall
 
     List<BookClubChallenge> findAllByDelYnFalse();
 
+    List<BookClubChallenge>findByIsbn13(long isbn13);
+
 }

@@ -19,7 +19,7 @@ import java.util.List;
 @Builder
 public class BookClubListResponse {
 
-    private Long bookClubID;
+    private Long bookClubId;
     private String bookClubName;
     private String description;
     private String bookCover;

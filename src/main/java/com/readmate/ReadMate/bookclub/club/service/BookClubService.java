@@ -25,10 +25,7 @@
     import com.readmate.ReadMate.login.service.UserService;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
-    import org.springframework.data.domain.Page;
-    import org.springframework.data.domain.PageRequest;
-    import org.springframework.data.domain.Pageable;
-    import org.springframework.data.domain.Sort;
+    import org.springframework.data.domain.*;
     import org.springframework.data.jpa.domain.Specification;
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
@@ -167,7 +164,7 @@
             Page<BookClub> bookClubs = bookClubRepository.findAll(spec, sortedPageable);
 
             return bookClubs.map(bookClub -> BookClubListResponse.builder()
-                    .bookClubID(bookClub.getBookClubId())
+                    .bookClubId(bookClub.getBookClubId())
                     .bookClubName(bookClub.getBookClubName())
                     .description(bookClub.getDescription())
                     .startDate(bookClub.getStartDate())
@@ -185,7 +182,7 @@
             BookClub bookClub = bookClubRepository.findById(clubId)
                     .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
 
-            List<BookClubChallenge> challengeList = bookClubChallengeRepository.findAllByDelYnAndBookClubId(false,bookClub.getBookClubId());
+            List<BookClubChallenge> challengeList = bookClubChallengeRepository.findAllByDelYnAndBookClubId(false, bookClub.getBookClubId());
             List<BookClubChallengeResponse> challengeResponses = getChallengeResponses(challengeList);
 
             BookClubResponse bookClubResponse = new BookClubResponse();
@@ -209,7 +206,7 @@
         }
 
         // 활성 챌린지 가져오기
-        public String getCurrentChallengeBookCover( Long bookClubId) {
+        public String getCurrentChallengeBookCover(Long bookClubId) {
             BookClubResponse bookClub = findById(bookClubId);
             List<BookClubChallenge> challenges = bookClubChallengeRepository.findAllByBookClubId(bookClubId);
 
@@ -234,7 +231,7 @@
 
 
         public void isBookClubNameTaken(String clubName) {
-            if(bookClubRepository.existsByBookClubName(clubName)){
+            if (bookClubRepository.existsByBookClubName(clubName)) {
                 throw new CustomException(ErrorCode.DUPLICATE_CLUB_NAME);
             }
         }
@@ -263,8 +260,40 @@
                     .favoriteGenre(bookClub.getFavoriteGenre())
                     .build();
         }
+        public Page<BookClubListResponse> getBookClubByIsbn13(long bookId, Pageable pageable) {
+            // 1. isbn13을 통해 챌린지 Repository 에 일치하는 챌린지 다 받아오기
+            List<BookClubChallenge>  bookClubChallenges = bookClubChallengeRepository.findByIsbn13(bookId);
+
+            if (bookClubChallenges.isEmpty()) {
+                throw new CustomException(ErrorCode.INVALID_BOOK);
+            }
+
+            // 2. 받아온 챌린지 엔티티로 BookId 리스트생성
+            List<Long> bookIds = bookClubChallenges.stream()
+                    .map(BookClubChallenge::getBookClubId)
+                    .toList();
+
+            // 2. bookIds로 BookClub 조회 (페이징 처리)
+            Page<BookClub> bookClubs = bookClubRepository.findByBookClubIdIn(bookIds, pageable);
+
+            // 3. BookClub 리스트를 BookClubListResponse 리스트로 변환
+            return bookClubs.map(bookClub ->
+                    BookClubListResponse.builder()
+                            .bookClubId(bookClub.getBookClubId())
+                            .bookClubName(bookClub.getBookClubName())
+                            .description(bookClub.getDescription())
+                            .startDate(bookClub.getStartDate())
+                            .endDate(bookClub.getEndDate())
+                            .recruitmentStartDate(bookClub.getRecruitmentStartDate())
+                            .recruitmentEndDate(bookClub.getRecruitmentEndDate())
+                            .favoriteGenre(bookClub.getFavoriteGenre())
+                            .build()
+            );
+
+        }
 
     }
+
 
 
 

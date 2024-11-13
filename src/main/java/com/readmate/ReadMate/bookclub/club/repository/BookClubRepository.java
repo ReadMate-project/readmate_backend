@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,7 +17,7 @@ public interface BookClubRepository extends JpaRepository<BookClub,Long>, JpaSpe
 
     boolean existsByBookClubName(String clubName);
 
-    Page<BookClub> findAllByDelYnFalseOrderByCreatedAtDesc(Specification spec, Pageable pageable);
-
     boolean existsByBookClubId(final long bookClubId);
+
+    Page<BookClub> findByBookClubIdIn(List<Long> bookIds, Pageable pageable);
 }
