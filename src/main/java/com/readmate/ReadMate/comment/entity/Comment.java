@@ -1,6 +1,5 @@
 package com.readmate.ReadMate.comment.entity;
 
-import com.readmate.ReadMate.common.formatter.DateFormatter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

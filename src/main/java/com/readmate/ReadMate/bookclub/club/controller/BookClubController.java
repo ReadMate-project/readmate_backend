@@ -49,12 +49,13 @@ public class BookClubController {
     }
 
     @GetMapping()
-    @Operation(summary = "북클럽 리스트 조회", description = "북클럽 리스트 조회합니다")
-    public  ResponseEntity<?> getClubList(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "5") int size) {
+    @Operation(summary = "북클럽 리스트 조회", description = "북클럽 리스트 조회합니다. 기본 최신순")
+    public  ResponseEntity<?> getClubList(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "5") int size,
+                                          @RequestParam(value="status", required = false,defaultValue = "전체")String status) {
 
         Pageable pageable = PageRequest.of(page-1, size);
 
-        Page<BookClubListResponse> bookClubPage = bookClubService.getClubList(pageable);
+        Page<BookClubListResponse> bookClubPage = bookClubService.getClubList(status, pageable);
         PageInfo pageInfo = new PageInfo(
                 bookClubPage.getNumber(),
                 bookClubPage.getSize(),
@@ -66,7 +67,7 @@ public class BookClubController {
     }
 
     @GetMapping("/{bookClubId}")
-    @Operation(summary = "북클럽 조회", description = "북클럽 조회합니다")
+    @Operation(summary = "북클럽 상세 조회", description = "북클럽 ID 로 북클럽 상세 조회합니다")
     public ResponseEntity<?> getBookClub(@PathVariable(name = "bookClubId") final long bookClubId) {
         // 조회하면 조회수 증가하도록
         bookClubService.incrementViewCount(bookClubId);
@@ -74,4 +75,26 @@ public class BookClubController {
         return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubResponse));
     }
 
+    //ISBN13 으로 북클럽 목록 조회
+    @GetMapping("/isbn")
+    @Operation(summary = "책으로 북클럽 조회", description = "ISBN13으로 북클럽 목록을 조회합니다")
+    public ResponseEntity<?> getBookClubByIsbn13(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "5") int size,
+                                                 @RequestParam("bookId") final long bookId) {
+        Pageable pageable = PageRequest.of(page-1, size);
+
+        Page<BookClubListResponse> bookClubResponse = bookClubService.getBookClubByIsbn13(bookId,pageable);
+        return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubResponse));
+    }
+
+    //유저가 가입한 북클럽 조회
+    @GetMapping("/my")
+    @Operation(summary = "유저가 가입한 북클럽 조회", description = "유저가 가입한 북클럽 목록을 조회합니다")
+    public ResponseEntity<?> getUserBookClub(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "5") int size,
+                                             @AuthenticationPrincipal CustomUserDetails userDetails
+                                                ) {
+        Pageable pageable = PageRequest.of(page-1, size);
+
+        Page<BookClubListResponse> bookClubResponse = bookClubService.getBookClubByUserId(userDetails.getUser().getUserId(),pageable);
+        return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubResponse));
+    }
 }

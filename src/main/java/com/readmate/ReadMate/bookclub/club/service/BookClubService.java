@@ -16,17 +16,18 @@
     import com.readmate.ReadMate.bookclub.bookClubChallenge.repository.BookClubChallengeRepository;
     import com.readmate.ReadMate.bookclub.club.entity.BookClub;
     import com.readmate.ReadMate.bookclub.club.repository.BookClubRepository;
+    import com.readmate.ReadMate.bookclub.club.specification.BookClubSpecification;
     import com.readmate.ReadMate.bookclub.dailyMission.entity.DailyMission;
     import com.readmate.ReadMate.bookclub.dailyMission.repository.DailyMissionRepository;
     import com.readmate.ReadMate.common.exception.CustomException;
     import com.readmate.ReadMate.common.exception.enums.ErrorCode;
+    import com.readmate.ReadMate.common.page.PageUtil;
     import com.readmate.ReadMate.login.security.CustomUserDetails;
     import com.readmate.ReadMate.login.service.UserService;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
-    import org.springframework.data.domain.Page;
-    import org.springframework.data.domain.Pageable;
-    import org.springframework.data.domain.Sort;
+    import org.springframework.data.domain.*;
+    import org.springframework.data.jpa.domain.Specification;
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
@@ -87,7 +88,7 @@
         public Long updateClub(CustomUserDetails userDetails, Long clubId, BookClubRequest clubRequest) {
 
             // 책 날짜 중복 검증
-             validate(clubRequest);
+            validate(clubRequest);
 
             // 수정할 북클럽을 조회
             BookClub savedBookClub = bookClubRepository.findById(clubId)
@@ -98,7 +99,7 @@
             // 리더 여부 확인
             validateLeaderPermission(savedBookClub.getLeaderId(), clubId);
             //리더 변경 메소드 호출
-            bookClubMemberService.changeLeader(savedBookClub,userId);
+            bookClubMemberService.changeLeader(savedBookClub, userId);
             // 북클럽 정보 수정
             savedBookClub.updateBookClub(clubRequest);
 
@@ -141,28 +142,48 @@
         }
 
         // 북클럽 리스트 조회
-        public Page<BookClubListResponse> getClubList(Pageable pageable) {
-            Page<BookClub> bookClubs = bookClubRepository.findAllByDelYnFalse(pageable);
+        public Page<BookClubListResponse> getClubList(final String status, Pageable pageable) {
+            LocalDate today = LocalDate.now();
+
+            Specification<BookClub> spec = Specification.where(BookClubSpecification.withDelYnFalse());
+
+            if ("모집중".equals(status)) {
+                spec = spec.and(BookClubSpecification.isRecruiting(today));
+            } else if ("진행중".equals(status)) {
+                spec = spec.and(BookClubSpecification.isInProgress(today));
+            }
+
+            // 최신순 조회를 위한 Pageable 추가
+            // 따로 Service 단에서 처리한 이유 컨트롤러에서 전달받은 기본 Pageable 객체에 정렬 추가하는 건 Service 가 맞다고 생각
+            // 추후에 정렬기준이 주가 될 수 있으니!
+            Pageable sortedPageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+
+            Page<BookClub> bookClubs = bookClubRepository.findAll(spec, PageUtil.getSortedPageable(sortedPageable));
 
             return bookClubs.map(bookClub -> BookClubListResponse.builder()
-                    .bookClubID(bookClub.getBookClubId())
+                    .bookClubId(bookClub.getBookClubId())
                     .bookClubName(bookClub.getBookClubName())
                     .description(bookClub.getDescription())
                     .startDate(bookClub.getStartDate())
                     .endDate(bookClub.getEndDate())
-                    .recruitmentStartDate(bookClub.getStartDate())
-                    .recruitmentEndDate(bookClub.getEndDate())
+                    .recruitmentStartDate(bookClub.getRecruitmentStartDate())
+                    .recruitmentEndDate(bookClub.getRecruitmentEndDate())
                     .bookCover(getCurrentChallengeBookCover(bookClub.getBookClubId()))
                     .favoriteGenre(bookClub.getFavoriteGenre())
                     .build());
         }
+
 
         // 북클럽 세부 조회
         public BookClubResponse getBookClub(Long clubId) {
             BookClub bookClub = bookClubRepository.findById(clubId)
                     .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
 
-            List<BookClubChallenge> challengeList = bookClubChallengeRepository.findAllByDelYnAndBookClubId(false,bookClub.getBookClubId());
+            List<BookClubChallenge> challengeList = bookClubChallengeRepository.findAllByDelYnAndBookClubId(false, bookClub.getBookClubId());
             List<BookClubChallengeResponse> challengeResponses = getChallengeResponses(challengeList);
 
             BookClubResponse bookClubResponse = new BookClubResponse();
@@ -186,7 +207,7 @@
         }
 
         // 활성 챌린지 가져오기
-        public String getCurrentChallengeBookCover( Long bookClubId) {
+        public String getCurrentChallengeBookCover(Long bookClubId) {
             BookClubResponse bookClub = findById(bookClubId);
             List<BookClubChallenge> challenges = bookClubChallengeRepository.findAllByBookClubId(bookClubId);
 
@@ -211,7 +232,7 @@
 
 
         public void isBookClubNameTaken(String clubName) {
-            if(bookClubRepository.existsByBookClubName(clubName)){
+            if (bookClubRepository.existsByBookClubName(clubName)) {
                 throw new CustomException(ErrorCode.DUPLICATE_CLUB_NAME);
             }
         }
@@ -240,8 +261,79 @@
                     .favoriteGenre(bookClub.getFavoriteGenre())
                     .build();
         }
+        public Page<BookClubListResponse> getBookClubByIsbn13(long bookId, Pageable pageable) {
+
+
+
+            // 1. isbn13을 통해 챌린지 Repository 에 일치하는 챌린지 다 받아오기
+            List<BookClubChallenge>  bookClubChallenges = bookClubChallengeRepository.findByIsbn13(bookId);
+
+            if (bookClubChallenges.isEmpty()) {
+                throw new CustomException(ErrorCode.INVALID_BOOK);
+            }
+
+            // 2. 받아온 챌린지 엔티티로 BookId 리스트생성
+            List<Long> bookIds = bookClubChallenges.stream()
+                    .map(BookClubChallenge::getBookClubId)
+                    .toList();
+
+            // 3. 삭제되지 않은 북클럽 필터 추가
+            Specification<BookClub> spec = Specification.where(BookClubSpecification.withDelYnFalse())
+                    .and((root, query, criteriaBuilder) -> root.get("bookClubId").in(bookIds));
+
+            // 4. bookIds로 BookClub 조회 (페이징 처리)
+            Page<BookClub> bookClubs = bookClubRepository.findAll(spec, PageUtil.getSortedPageable(pageable));
+
+            // 3. BookClub 리스트를 BookClubListResponse 리스트로 변환
+            return bookClubs.map(bookClub ->
+                    BookClubListResponse.builder()
+                            .bookClubId(bookClub.getBookClubId())
+                            .bookClubName(bookClub.getBookClubName())
+                            .description(bookClub.getDescription())
+                            .startDate(bookClub.getStartDate())
+                            .endDate(bookClub.getEndDate())
+                            .recruitmentStartDate(bookClub.getRecruitmentStartDate())
+                            .recruitmentEndDate(bookClub.getRecruitmentEndDate())
+                            .favoriteGenre(bookClub.getFavoriteGenre())
+                            .build()
+            );
+
+        }
+
+        public Page<BookClubListResponse> getBookClubByUserId(final long userId, Pageable pageable) {
+            // 1. BookClubMember 에서 유저 아이디로 BookClubMember 조회
+            List<Long> bookClubIds = bookClubMemberService.findBookClubIdsByUserId(userId);
+
+            // 2. 책클럽 Id 로 북클럽 조회 - 최신순 정렬
+            Pageable sortedPageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+            // 2. 삭제되지 않은 북클럽 필터 추가
+            Specification<BookClub> spec = Specification.where(BookClubSpecification.withDelYnFalse())
+                    .and((root, query, criteriaBuilder) -> root.get("bookClubId").in(bookClubIds));
+
+            // 3. bookClubIds로 북클럽 조회 (정렬된 pageable 사용)
+            Page<BookClub> bookClubs = bookClubRepository.findAll(spec, PageUtil.getSortedPageable(pageable));
+
+            // 4. BookClub 리스트를 BookClubListResponse 리스트로 변환
+            return bookClubs.map(bookClub ->
+                    BookClubListResponse.builder()
+                            .bookClubId(bookClub.getBookClubId())
+                            .bookClubName(bookClub.getBookClubName())
+                            .description(bookClub.getDescription())
+                            .startDate(bookClub.getStartDate())
+                            .endDate(bookClub.getEndDate())
+                            .recruitmentStartDate(bookClub.getRecruitmentStartDate())
+                            .recruitmentEndDate(bookClub.getRecruitmentEndDate())
+                            .favoriteGenre(bookClub.getFavoriteGenre())
+                            .build()
+            );
+        }
 
     }
+
 
 
 
