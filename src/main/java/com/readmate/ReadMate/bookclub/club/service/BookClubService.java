@@ -21,6 +21,7 @@
     import com.readmate.ReadMate.bookclub.dailyMission.repository.DailyMissionRepository;
     import com.readmate.ReadMate.common.exception.CustomException;
     import com.readmate.ReadMate.common.exception.enums.ErrorCode;
+    import com.readmate.ReadMate.common.page.PageUtil;
     import com.readmate.ReadMate.login.security.CustomUserDetails;
     import com.readmate.ReadMate.login.service.UserService;
     import lombok.RequiredArgsConstructor;
@@ -161,7 +162,7 @@
                     Sort.by(Sort.Direction.DESC, "createdAt")
             );
 
-            Page<BookClub> bookClubs = bookClubRepository.findAll(spec, sortedPageable);
+            Page<BookClub> bookClubs = bookClubRepository.findAll(spec, PageUtil.getSortedPageable(sortedPageable));
 
             return bookClubs.map(bookClub -> BookClubListResponse.builder()
                     .bookClubId(bookClub.getBookClubId())
@@ -290,6 +291,35 @@
                             .build()
             );
 
+        }
+
+        public Page<BookClubListResponse> getBookClubByUserId(final long userId, Pageable pageable) {
+            // 1. BookClubMember 에서 유저 아이디로 BookClubMember 조회
+            List<Long> bookClubIds = bookClubMemberService.findBookClubIdsByUserId(userId);
+
+            // 2. 책클럽 Id 로 북클럽 조회 - 최신순 정렬
+            Pageable sortedPageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+
+            // 3. 책클럽 Id로 북클럽 조회 (정렬 조건이 추가된 pageable 사용)
+            Page<BookClub> bookClubs = bookClubRepository.findByBookClubIdIn(bookClubIds, PageUtil.getSortedPageable(pageable));
+
+            // 3. BookClub 리스트를 BookClubListResponse 리스트로 변환
+            return bookClubs.map(bookClub ->
+                    BookClubListResponse.builder()
+                            .bookClubId(bookClub.getBookClubId())
+                            .bookClubName(bookClub.getBookClubName())
+                            .description(bookClub.getDescription())
+                            .startDate(bookClub.getStartDate())
+                            .endDate(bookClub.getEndDate())
+                            .recruitmentStartDate(bookClub.getRecruitmentStartDate())
+                            .recruitmentEndDate(bookClub.getRecruitmentEndDate())
+                            .favoriteGenre(bookClub.getFavoriteGenre())
+                            .build()
+            );
         }
 
     }
