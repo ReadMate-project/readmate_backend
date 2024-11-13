@@ -262,6 +262,9 @@
                     .build();
         }
         public Page<BookClubListResponse> getBookClubByIsbn13(long bookId, Pageable pageable) {
+
+
+
             // 1. isbn13을 통해 챌린지 Repository 에 일치하는 챌린지 다 받아오기
             List<BookClubChallenge>  bookClubChallenges = bookClubChallengeRepository.findByIsbn13(bookId);
 
@@ -274,8 +277,12 @@
                     .map(BookClubChallenge::getBookClubId)
                     .toList();
 
-            // 2. bookIds로 BookClub 조회 (페이징 처리)
-            Page<BookClub> bookClubs = bookClubRepository.findByBookClubIdIn(bookIds, pageable);
+            // 3. 삭제되지 않은 북클럽 필터 추가
+            Specification<BookClub> spec = Specification.where(BookClubSpecification.withDelYnFalse())
+                    .and((root, query, criteriaBuilder) -> root.get("bookClubId").in(bookIds));
+
+            // 4. bookIds로 BookClub 조회 (페이징 처리)
+            Page<BookClub> bookClubs = bookClubRepository.findAll(spec, PageUtil.getSortedPageable(pageable));
 
             // 3. BookClub 리스트를 BookClubListResponse 리스트로 변환
             return bookClubs.map(bookClub ->
@@ -303,11 +310,14 @@
                     pageable.getPageSize(),
                     Sort.by(Sort.Direction.DESC, "createdAt")
             );
+            // 2. 삭제되지 않은 북클럽 필터 추가
+            Specification<BookClub> spec = Specification.where(BookClubSpecification.withDelYnFalse())
+                    .and((root, query, criteriaBuilder) -> root.get("bookClubId").in(bookClubIds));
 
-            // 3. 책클럽 Id로 북클럽 조회 (정렬 조건이 추가된 pageable 사용)
-            Page<BookClub> bookClubs = bookClubRepository.findByBookClubIdIn(bookClubIds, PageUtil.getSortedPageable(pageable));
+            // 3. bookClubIds로 북클럽 조회 (정렬된 pageable 사용)
+            Page<BookClub> bookClubs = bookClubRepository.findAll(spec, PageUtil.getSortedPageable(pageable));
 
-            // 3. BookClub 리스트를 BookClubListResponse 리스트로 변환
+            // 4. BookClub 리스트를 BookClubListResponse 리스트로 변환
             return bookClubs.map(bookClub ->
                     BookClubListResponse.builder()
                             .bookClubId(bookClub.getBookClubId())
