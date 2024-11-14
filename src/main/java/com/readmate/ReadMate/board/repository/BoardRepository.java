@@ -34,6 +34,8 @@ public interface BoardRepository  extends JpaRepository<Board, Long>, JpaSpecifi
             "ORDER BY COUNT(l.likeId) DESC, COUNT(c.commentId) DESC, b.createdAt ASC")
     List<Board> findTopBoardsByLikesAndComments(@Param("boardType") BoardType boardType, Pageable pageable);
 
+    @Query("SELECT COUNT(b) FROM Board b WHERE b.bookclubId = :bookClubId")
+    Long getBoardCountByBookclubId(@Param("bookClubId") Long bookClubId);
 
 
 }

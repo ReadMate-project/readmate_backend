@@ -1,5 +1,8 @@
 package com.readmate.ReadMate.bookclub.club.controller;
 
+import com.readmate.ReadMate.board.dto.response.BoardResponse;
+import com.readmate.ReadMate.board.entity.Board;
+import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.bookclub.club.dto.req.BookClubRequest;
 import com.readmate.ReadMate.bookclub.club.dto.res.BookClubListResponse;
 import com.readmate.ReadMate.bookclub.club.dto.res.BookClubResponse;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -97,4 +101,17 @@ public class BookClubController {
         Page<BookClubListResponse> bookClubResponse = bookClubService.getBookClubByUserId(userDetails.getUser().getUserId(),pageable);
         return ResponseEntity.ok(BasicResponse.ofSuccess(bookClubResponse));
     }
+
+    //인기있는 북클럽 조회
+    @GetMapping("/hotClub")
+    @Operation(summary = "인기있는 북클럽 목록 조회", description = "멤버수, Completion, 생성일 순으로 상위 3개의 북클럽 목록 조회 API")
+    public ResponseEntity<?> getHotBookClubs() {
+        // BookClubService에서 상위 3개의 인기 북클럽을 가져옴
+        List<BookClubListResponse> hotBookClubs = bookClubService.getHotBookClubs();
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess(hotBookClubs));
+    }
+
+
+
 }
