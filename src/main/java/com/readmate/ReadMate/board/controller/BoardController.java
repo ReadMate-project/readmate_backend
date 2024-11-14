@@ -2,7 +2,11 @@ package com.readmate.ReadMate.board.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.readmate.ReadMate.board.dto.*;
+import com.readmate.ReadMate.board.dto.request.BoardRequest;
+import com.readmate.ReadMate.board.dto.request.BoardUpdateRequest;
+import com.readmate.ReadMate.board.dto.response.BoardResponse;
+import com.readmate.ReadMate.board.dto.response.CalendarBookResponse;
+import com.readmate.ReadMate.board.dto.response.FeedResponse;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.service.BoardService;
@@ -11,13 +15,17 @@ import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMember;
 import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMemberRole;
 import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.bookclub.dailyMission.service.BookClubMissionService;
+import com.readmate.ReadMate.comment.service.CommentService;
 import com.readmate.ReadMate.common.dto.PageInfo;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.common.message.ErrorResponse;
 import com.readmate.ReadMate.image.service.ImageService;
+import com.readmate.ReadMate.like.service.LikesSerivce;
+import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
+import com.readmate.ReadMate.login.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
@@ -38,6 +46,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -49,6 +58,9 @@ public class BoardController {
     private final BookClubMemberService bookClubMemberService;
     private final ImageService imageService;
     private final BookClubMissionService bookClubMissionService;
+    private final LikesSerivce likesSerivce;
+    private final CommentService commentService;
+    private final UserService userService;
 
 
     //0.게시판 작성
@@ -156,11 +168,7 @@ public class BoardController {
         }
     }
 
-
-
-
     //1.게시판 수정
-    // 1.게시판 수정
     @PatchMapping("/{boardId}")
     @Operation(summary = "게시물 수정", description = "게시물 수정 API")
     public ResponseEntity<BasicResponse<Board>> updateBoard(
@@ -173,7 +181,6 @@ public class BoardController {
             ObjectMapper objectMapper = new ObjectMapper();
             BoardUpdateRequest updateRequest = null;
 
-            // JSON 문자열이 있을 경우에만 객체로 변환
             if (updateRequestJson != null && !updateRequestJson.isEmpty()) {
                 updateRequest = objectMapper.readValue(updateRequestJson, BoardUpdateRequest.class);
             }
@@ -270,20 +277,45 @@ public class BoardController {
     //3. 게시판 별 내가 쓴 글 목록 조회
     @GetMapping("/mypost")
     @Operation(summary = "사용자 게시글 목록 조회", description = "특정 사용자와 게시글 타입에 따른 게시글 목록 조회 API")
-    public ResponseEntity<BasicResponse<List<Board>>> getBoardsByUserIdAndType(
+    public ResponseEntity<BasicResponse<List<BoardResponse>>> getBoardsByUserIdAndType(
             @RequestParam("boardType") BoardType boardType,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("page") int page,
             @RequestParam("size") int size) {
 
         if (userDetails == null || userDetails.getUser() == null) {
-            BasicResponse<List<Board>> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
+            BasicResponse<List<BoardResponse>> errorResponseWrapper = BasicResponse.ofError("로그인을 진행해주세요", HttpStatus.UNAUTHORIZED.value());
             return new ResponseEntity<>(errorResponseWrapper, HttpStatus.UNAUTHORIZED);
         }
 
-        // userId와 BoardType에 따른 게시글 목록 조회
         Long userId = userDetails.getUser().getUserId();
         Page<Board> boardPage = boardService.getBoardsByUserIdAndType(userId, boardType, page, size);
+
+        List<BoardResponse> boardResponseList = boardPage.getContent().stream().map(board -> {
+            List<String> imageUrls = imageService.findImageUrlsByBoardId(board.getBoardId());
+            int commentCount = commentService.countCommentsByBoardId(board.getBoardId());
+            int likeCount = likesSerivce.countLikesByBoardId(board.getBoardId());
+
+            User user = userService.getUserById(board.getUserId());
+            String nickname = user.getNickname();
+            String profileImageUrl = user.getProfileImageUrl();
+
+            return BoardResponse.builder()
+                    .boardId(board.getBoardId())
+                    .boardType(board.getBoardType())
+                    .bookId(board.getBookId())
+                    .bookclubId(board.getBookclubId())
+                    .content(board.getContent())
+                    .createdAt(board.getCreatedAt().toString())
+                    .title(board.getTitle())
+                    .userId(board.getUserId())
+                    .imageUrls(imageUrls)
+                    .commentCount(commentCount)
+                    .likeCount(likeCount)
+                    .nickname(nickname)
+                    .profileImageUrl(profileImageUrl)
+                    .build();
+        }).collect(Collectors.toList());
 
         PageInfo pageInfo = new PageInfo(
                 boardPage.getNumber(),
@@ -292,17 +324,17 @@ public class BoardController {
                 boardPage.getTotalPages()
         );
 
-
-        BasicResponse<List<Board>> response = BasicResponse.ofSuccessWithPageInfo(boardPage.getContent(), pageInfo);
+        BasicResponse<List<BoardResponse>> response = BasicResponse.ofSuccessWithPageInfo(boardResponseList, pageInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     //4. 게시판 별 게시글 목록 조회
     //4-1. 자유 게시판일 경우에는 로그인 유무와 상관없이 목록 조회 가능
     //4-2. 북클럽내 자유게시판일 경우 로그인 및 해당 북클럽 회원이어야지만 해당 북클럽 자유게시판 목록 조회 가능
     @GetMapping("/")
     @Operation(summary = "게시글 목록 조회", description = "게시글 타입에 따른 게시글 목록 조회 API")
-    public ResponseEntity<BasicResponse<List<Board>>> getBoardsByType(
+    public ResponseEntity<BasicResponse<List<BoardResponse>>> getBoardsByType(
             @RequestParam("boardType") BoardType boardType,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("page") int page,
@@ -323,15 +355,14 @@ public class BoardController {
             Long userId = userDetails.getUser().getUserId();
 
             // 로그인한 유저가 해당 북클럽의 회원인지 확인
-            List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMembers(bookclubId, userDetails.getUser().getUserId(),false);
+            List<BookClubMemberResponse> memberResponses = bookClubMemberService.findMembers(bookclubId, userId, false);
 
-            // memberResponses를 사용해 북클럽 회원인지 확인
             if (memberResponses.isEmpty()) {
                 throw new CustomException(ErrorCode.UNAUTHORIZED);
             }
 
             // 로그인한 유저가 소속된 북클럽의 게시물 조회 (bookclubId를 사용)
-            boardPage = boardService.getBoardsByType(boardType, page, size, bookclubId); // bookclubId 사용
+            boardPage = boardService.getBoardsByType(boardType, page, size, bookclubId);
 
             // 게시물이 존재하지 않을 경우
             if (boardPage.isEmpty()) {
@@ -341,6 +372,32 @@ public class BoardController {
             throw new CustomException(ErrorCode.INVALID_BOARD);
         }
 
+        List<BoardResponse> boardResponseList = boardPage.getContent().stream().map(board -> {
+            List<String> imageUrls = imageService.findImageUrlsByBoardId(board.getBoardId());
+            int commentCount = commentService.countCommentsByBoardId(board.getBoardId());
+            int likeCount = likesSerivce.countLikesByBoardId(board.getBoardId());
+
+            User user = userService.getUserById(board.getUserId());
+            String nickname = user.getNickname();
+            String profileImageUrl = user.getProfileImageUrl();
+
+            return BoardResponse.builder()
+                    .boardId(board.getBoardId())
+                    .boardType(board.getBoardType())
+                    .bookId(board.getBookId())
+                    .bookclubId(board.getBookclubId())
+                    .content(board.getContent())
+                    .createdAt(board.getCreatedAt().toString())
+                    .title(board.getTitle())
+                    .userId(board.getUserId())
+                    .imageUrls(imageUrls)
+                    .commentCount(commentCount)
+                    .likeCount(likeCount)
+                    .nickname(nickname)
+                    .profileImageUrl(profileImageUrl)
+                    .build();
+        }).collect(Collectors.toList());
+
         PageInfo pageInfo = new PageInfo(
                 boardPage.getNumber(),
                 boardPage.getSize(),
@@ -348,11 +405,10 @@ public class BoardController {
                 boardPage.getTotalPages()
         );
 
-        BasicResponse<List<Board>> response = BasicResponse.ofSuccessWithPageInfo(boardPage.getContent(), pageInfo);
+        BasicResponse<List<BoardResponse>> response = BasicResponse.ofSuccessWithPageInfo(boardResponseList, pageInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
+    
     //5. 게시판 상세 조회
     @GetMapping("/{boardId}")
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세 조회 API")
@@ -383,6 +439,49 @@ public class BoardController {
 
         return ResponseEntity.ok(board);
     }
+
+    //6.HOT post -> 인기있는 게시글 목록 반환
+    @GetMapping("/hotpost")
+    @Operation(summary = "인기있는 게시글 목록 조회", description = "좋아요, 댓글 수, 생성일 순으로 게시글 목록 조회 API")
+    public ResponseEntity<BasicResponse<List<BoardResponse>>> getTopLikedAndCommentedBoards(
+            @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+
+        //로그인 안한 상태 + 볼 수 있는 게시판이 자유게시판 뿐
+        Page<Board> boardPage = boardService.getTopBoardsByLikesAndComments(BoardType.BOARD, page, size);
+
+        List<BoardResponse> boardResponseList = boardPage.getContent().stream().map(board -> {
+            List<String> imageUrls = imageService.findImageUrlsByBoardId(board.getBoardId());
+            int commentCount = commentService.countCommentsByBoardId(board.getBoardId());
+            int likeCount = likesSerivce.countLikesByBoardId(board.getBoardId());
+
+            return BoardResponse.builder()
+                    .boardId(board.getBoardId())
+                    .boardType(board.getBoardType())
+                    .bookId(board.getBookId())
+                    .bookclubId(board.getBookclubId())
+                    .content(board.getContent())
+                    .createdAt(board.getCreatedAt().toString())
+                    .title(board.getTitle())
+                    .userId(board.getUserId())
+                    .imageUrls(imageUrls)
+                    .commentCount(commentCount)
+                    .likeCount(likeCount)
+                    .build();
+        }).collect(Collectors.toList());
+
+        PageInfo pageInfo = new PageInfo(
+                boardPage.getNumber(),
+                boardPage.getSize(),
+                (int) boardPage.getTotalElements(),
+                boardPage.getTotalPages()
+        );
+
+        BasicResponse<List<BoardResponse>> response = BasicResponse.ofSuccessWithPageInfo(boardResponseList, pageInfo);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
+    
 
     // 날짜 범위 내에서 작성된 피드에 해당하는 책 정보를 반환
     @GetMapping("/calendar/books")

@@ -1,7 +1,7 @@
 package com.readmate.ReadMate.bookclub.bookClubMember.controller;
 
 
-import com.readmate.ReadMate.board.dto.MVPResponse;
+import com.readmate.ReadMate.board.dto.response.MVPResponse;
 import com.readmate.ReadMate.board.service.BoardService;
 import com.readmate.ReadMate.bookclub.bookClubMember.dto.BookClubJoinRequest;
 import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;

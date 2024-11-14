@@ -78,12 +78,11 @@ public class CommentService {
     public Page<Comment> findCommentsByBoardIdWithPagination(Long boardId, Pageable pageable) {
         return commentRepository.findByBoardId(boardId, pageable);
     }
-
-
-
-
-
-
+    
+    //5. 게시글에 해당하는 댓글 총 개수
+    public int countCommentsByBoardId(Long boardId) {
+        return commentRepository.countByBoardId(boardId);
+    }
 
 
 }

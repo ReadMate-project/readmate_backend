@@ -90,4 +90,11 @@ public class ImageService {
 
         return savedImages;
     }
+
+    public List<String> findImageUrlsByBoardId(Long boardId) {
+        return imageRepository.findByBoardId(boardId)
+                .stream()
+                .map(Image::getImageUrl)
+                .collect(Collectors.toList());
+    }
 }

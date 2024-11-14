@@ -27,5 +27,14 @@ public interface BoardRepository  extends JpaRepository<Board, Long>, JpaSpecifi
     List<Board> findByBookclubIdAndBoardType(Long bookclubId, BoardType boardType);
 
 
+    @Query("SELECT b FROM Board b LEFT JOIN Likes l ON b.BoardId = l.boardId AND l.liked = true " +
+            "LEFT JOIN Comment c ON b.BoardId = c.boardId " +
+            "WHERE b.boardType = :boardType " +
+            "GROUP BY b.BoardId " +
+            "ORDER BY COUNT(l.likeId) DESC, COUNT(c.commentId) DESC, b.createdAt ASC")
+    List<Board> findTopBoardsByLikesAndComments(@Param("boardType") BoardType boardType, Pageable pageable);
+
+
+
 }
 
