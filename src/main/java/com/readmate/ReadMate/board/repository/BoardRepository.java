@@ -38,5 +38,6 @@ public interface BoardRepository  extends JpaRepository<Board, Long>, JpaSpecifi
     Long getBoardCountByBookclubId(@Param("bookClubId") Long bookClubId);
 
 
+    List<Board> findByBookclubIdAndBoardTypeAndCreatedAtBetween(Long bookClubId, BoardType boardType, LocalDateTime startOfWeek, LocalDateTime endOfWeek);
 }
 

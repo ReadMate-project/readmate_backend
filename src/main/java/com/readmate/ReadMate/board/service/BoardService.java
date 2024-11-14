@@ -25,8 +25,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -155,8 +157,11 @@ public class BoardService {
 
     public List<MVPResponse> getMVPResponse(Long bookClubId) {
 
-        // 1. 해당 북클럽에 속한 피드(에세이) 조회
-        List<Board> boards = boardRepository.findByBookclubIdAndBoardType(bookClubId, BoardType.FEED);
+        LocalDateTime startOfWeek = LocalDateTime.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate().atStartOfDay();
+        LocalDateTime endOfWeek = LocalDateTime.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).toLocalDate().atTime(23, 59, 59);
+
+        // 2. 해당 북클럽에 속한 이번 주에 생성된 피드(에세이) 조회
+        List<Board> boards = boardRepository.findByBookclubIdAndBoardTypeAndCreatedAtBetween(bookClubId, BoardType.FEED, startOfWeek, endOfWeek);
 
         // 2. 각 피드(에세이)에 대해 좋아요, 댓글 수를 조회하고, MVPResponse 객체 생성
         List<MVPResponse> mvpResponses = boards.stream().map(board -> {
