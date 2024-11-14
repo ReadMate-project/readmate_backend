@@ -23,4 +23,6 @@ public interface BookClubMemberRepository extends JpaRepository<BookClubMember, 
     List<BookClubMember> findByBookClubIdAndDelYnFalse(long bookClubId);
 
     List<BookClubMember> findByUserIdAndIsApproveAndDelYn(Long userId, boolean isApprove, boolean delYn);
+
+    int countByBookClubId(Long bookClubId);
 }

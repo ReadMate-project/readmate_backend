@@ -83,7 +83,7 @@ public class BookClubMemberController {
 
     @GetMapping("/mvp")
     public ResponseEntity<BasicResponse<List<MVPResponse>>> getMVP(
-            @RequestParam Long bookClubId) {
+            @PathVariable Long bookClubId) {
 
         List<MVPResponse> mvpResponses = boardService.getMVPResponse(bookClubId);
 

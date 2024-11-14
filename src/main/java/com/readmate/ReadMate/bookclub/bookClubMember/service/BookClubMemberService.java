@@ -171,4 +171,8 @@ public class BookClubMemberService {
         bookClubMemberRepository.save(newLeader);
         bookClubMemberRepository.save(oldLeader);
     }
+    //북클럽 Id로 회원수 조회
+    public int getMemberCountByBookClubId(Long bookClubId) {
+        return bookClubMemberRepository.countByBookClubId(bookClubId);
+    }
 }

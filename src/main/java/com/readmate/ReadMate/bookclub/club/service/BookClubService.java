@@ -1,5 +1,6 @@
     package com.readmate.ReadMate.bookclub.club.service;
 
+    import com.readmate.ReadMate.board.repository.BoardRepository;
     import com.readmate.ReadMate.book.dto.res.BookResponse;
     import com.readmate.ReadMate.book.entity.Book;
 
@@ -19,6 +20,7 @@
     import com.readmate.ReadMate.bookclub.club.specification.BookClubSpecification;
     import com.readmate.ReadMate.bookclub.dailyMission.entity.DailyMission;
     import com.readmate.ReadMate.bookclub.dailyMission.repository.DailyMissionRepository;
+    import com.readmate.ReadMate.bookclub.dailyMission.service.BookClubMissionService;
     import com.readmate.ReadMate.common.exception.CustomException;
     import com.readmate.ReadMate.common.exception.enums.ErrorCode;
     import com.readmate.ReadMate.common.page.PageUtil;
@@ -34,6 +36,7 @@
 
     import java.time.LocalDate;
 
+    import java.util.Comparator;
     import java.util.List;
     import java.util.stream.Collectors;
 
@@ -56,6 +59,8 @@
         private final UserService userService;
         private final DailyMissionRepository dailyMissionRepository;
         private final BookClubChallengeRepository bookClubChallengeRepository;
+        private final BoardRepository boardRepository;
+
 
         public Long createClub(CustomUserDetails userDetails, BookClubRequest clubRequest) {
 
@@ -330,6 +335,34 @@
                             .favoriteGenre(bookClub.getFavoriteGenre())
                             .build()
             );
+        }
+
+        public List<BookClubListResponse> getHotBookClubs() {
+            Specification<BookClub> spec = Specification.where(BookClubSpecification.withDelYnFalse());
+            List<BookClub> bookClubs = bookClubRepository.findAll(spec);
+
+            // 정렬 및 상위 3개의 결과 선택 후 변환
+            List<BookClubListResponse> sortedHotBookClubs = bookClubs.stream()
+                    .sorted(Comparator.comparing((BookClub bookClub) ->
+                                    bookClubMemberService.getMemberCountByBookClubId(bookClub.getBookClubId())).reversed()
+                            .thenComparing(bookClub ->
+                                    boardRepository.getBoardCountByBookclubId(bookClub.getBookClubId())).reversed()
+                            .thenComparing(BookClub::getCreatedAt).reversed()) // BookClub의 createdAt을 직접 사용
+                    .limit(3)
+                    .map(bookClub -> new BookClubListResponse(
+                            bookClub.getBookClubId(),
+                            bookClub.getBookClubName(),
+                            bookClub.getDescription(),
+                            getCurrentChallengeBookCover(bookClub.getBookClubId()),
+                            bookClub.getFavoriteGenre(),
+                            bookClub.getStartDate(),
+                            bookClub.getEndDate(),
+                            bookClub.getRecruitmentStartDate(),
+                            bookClub.getRecruitmentEndDate()
+                    ))
+                    .collect(Collectors.toList());
+
+            return sortedHotBookClubs;
         }
 
     }
