@@ -1,4 +1,4 @@
-package com.readmate.ReadMate.board.dto;
+package com.readmate.ReadMate.board.dto.response;
 
 import com.readmate.ReadMate.book.dto.res.BookResponse;
 import lombok.AllArgsConstructor;

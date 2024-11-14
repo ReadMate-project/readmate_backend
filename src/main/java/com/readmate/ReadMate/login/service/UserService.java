@@ -2,6 +2,7 @@ package com.readmate.ReadMate.login.service;
 
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import com.nimbusds.jose.shaded.gson.JsonParser;
+import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.image.utils.S3Uploader;
 import com.readmate.ReadMate.login.dto.res.KakaoTokenResponse;
 import com.readmate.ReadMate.login.entity.User;
@@ -16,6 +17,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import com.readmate.ReadMate.common.exception.enums.ErrorCode;
+
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -216,4 +219,10 @@ public class UserService {
     private String extractFileName(String imageUrl) {
         return imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
     }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
+    }
+
 }

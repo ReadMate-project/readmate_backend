@@ -40,4 +40,14 @@ public class User {
 
     @Column
     private String content;  //한줄 소개
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+
 }
