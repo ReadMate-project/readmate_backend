@@ -1,8 +1,8 @@
 package com.readmate.ReadMate.board.service;
 
-import com.readmate.ReadMate.board.dto.CalendarBookResponse;
-import com.readmate.ReadMate.board.dto.FeedResponse;
-import com.readmate.ReadMate.board.dto.MVPResponse;
+import com.readmate.ReadMate.board.dto.response.CalendarBookResponse;
+import com.readmate.ReadMate.board.dto.response.FeedResponse;
+import com.readmate.ReadMate.board.dto.response.MVPResponse;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.repository.BoardRepository;
@@ -11,7 +11,6 @@ import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.book.repository.BookRepository;
 import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.book.service.MyBookService;
-import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.comment.repository.CommentRepository;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
@@ -19,10 +18,9 @@ import com.readmate.ReadMate.like.repository.LikesRepository;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
-import com.readmate.ReadMate.login.security.CustomUserDetailsService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -196,5 +194,14 @@ public class BoardService {
 
         return mvpResponses;
     }
+
+
+    //HOT-POST
+    public Page<Board> getTopBoardsByLikesAndComments(BoardType boardType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        List<Board> boards = boardRepository.findTopBoardsByLikesAndComments(boardType, pageable);
+        return new PageImpl<>(boards, pageable, boards.size());
+    }
+
 
 }
