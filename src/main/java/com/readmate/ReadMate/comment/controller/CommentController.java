@@ -7,13 +7,16 @@ import com.readmate.ReadMate.bookclub.bookClubMember.dto.BookClubMemberResponse;
 import com.readmate.ReadMate.bookclub.bookClubMember.service.BookClubMemberService;
 import com.readmate.ReadMate.comment.dto.CommentRequest;
 import com.readmate.ReadMate.comment.dto.CommentResWithPageInfo;
+import com.readmate.ReadMate.comment.dto.CommentResponse;
 import com.readmate.ReadMate.comment.entity.Comment;
 import com.readmate.ReadMate.comment.service.CommentService;
 import com.readmate.ReadMate.common.dto.PageInfo;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.common.message.BasicResponse;
+import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
+import com.readmate.ReadMate.login.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -38,6 +42,7 @@ public class CommentController {
     private final CommentService commentService;
     private final BoardService boardService;
     private final BookClubMemberService bookClubMemberService;
+    private final UserService userService;
 
 
     //1. 댓글 작성
@@ -48,12 +53,11 @@ public class CommentController {
             @RequestBody CommentRequest commentRequest,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        // 사용자 인증 확인
+
         if (userDetails == null || userDetails.getUser() == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        //해당 게시판의 타입을 가져오기 위해 boardId로 게시글 조회
         Board board = boardService.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOARD));
 
@@ -69,7 +73,6 @@ public class CommentController {
             }
         }
 
-        // 댓글 저장
         Comment comment = commentService.saveComment(commentRequest, userDetails.getUser().getUserId(), boardId);
 
         BasicResponse<Comment> response = BasicResponse.ofSuccess(comment);
@@ -133,20 +136,30 @@ public class CommentController {
             @PathVariable("boardId") Long boardId,
             @RequestParam("page") int page,
             @RequestParam("size") int size,
-            @RequestParam(value = "sort", required = false, defaultValue = "latest") String sort) // 정렬 디폴트가 최신순
-    {
+            @RequestParam(value = "sort", required = false, defaultValue = "latest") String sort) {
+
 
         Board board = boardService.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_BOARD));
 
-        Pageable pageable;
-        if (sort.equals("latest")) {
-            pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());  // 최신순
-        } else {
-            pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());  // 등록순
-        }
+        Pageable pageable = sort.equals("latest")
+                ? PageRequest.of(page, size, Sort.by("createdAt").descending())
+                : PageRequest.of(page, size, Sort.by("createdAt").ascending());
 
         Page<Comment> commentPage = commentService.findCommentsByBoardIdWithPagination(boardId, pageable);
+
+        List<CommentResponse> commentResponses = commentPage.getContent().stream().map(comment -> {
+            User user = userService.getUserById(comment.getUserId());
+            return new CommentResponse(
+                    comment.getCommentId(),
+                    comment.getBoardId(),
+                    comment.getUserId(),
+                    comment.getContent(),
+                    comment.getCreatedAt().toString(),
+                    user.getNickname(),
+                    user.getProfileImageUrl()
+            );
+        }).collect(Collectors.toList());
 
         PageInfo pageInfo = new PageInfo(
                 commentPage.getNumber(),
@@ -155,10 +168,10 @@ public class CommentController {
                 commentPage.getTotalPages()
         );
 
-
-        CommentResWithPageInfo responseBody = new CommentResWithPageInfo(commentPage.getContent(), pageInfo);
+        CommentResWithPageInfo responseBody = new CommentResWithPageInfo(commentResponses, pageInfo);
         BasicResponse<CommentResWithPageInfo> response = BasicResponse.ofSuccess(responseBody);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 }
