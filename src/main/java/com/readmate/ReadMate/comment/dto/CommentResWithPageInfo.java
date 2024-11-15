@@ -15,6 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 public class CommentResWithPageInfo {
 
-    private List<Comment> comments;
+    private List<CommentResponse> comments;
     private PageInfo pageInfo;
 }
