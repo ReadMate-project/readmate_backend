@@ -103,7 +103,6 @@ public class CommentController {
         if (commentRequest.getContent() != null) {
             comment.setContent(commentRequest.getContent());
         }
-        comment.onUpdate();
 
         Comment updatedComment = commentService.updateComment(comment);
         BasicResponse<Comment> response = BasicResponse.ofSuccess(updatedComment);
