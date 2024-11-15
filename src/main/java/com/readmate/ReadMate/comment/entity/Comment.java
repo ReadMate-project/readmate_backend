@@ -31,13 +31,4 @@ public class Comment {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void onUpdate() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

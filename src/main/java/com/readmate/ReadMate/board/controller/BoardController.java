@@ -339,7 +339,7 @@ public class BoardController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("page") int page,
             @RequestParam("size") int size,
-            @RequestParam("bookclubId") Long bookclubId) { // 선택적 파라미터
+            @RequestParam(value = "bookclubId", required = false) Long bookclubId) { // 선택적 파라미터
 
         Page<Board> boardPage;
 
@@ -437,7 +437,31 @@ public class BoardController {
             }
         }
 
-        return ResponseEntity.ok(board);
+        List<String> imageUrls = imageService.findImageUrlsByBoardId(board.getBoardId());
+        int commentCount = commentService.countCommentsByBoardId(board.getBoardId());
+        int likeCount = likesSerivce.countLikesByBoardId(board.getBoardId());
+
+        User user = userService.getUserById(board.getUserId());
+        String nickname = user.getNickname();
+        String profileImageUrl = user.getProfileImageUrl();
+
+        BoardResponse boardResponse = BoardResponse.builder()
+                .boardId(board.getBoardId())
+                .boardType(board.getBoardType())
+                .bookId(board.getBookId())
+                .bookclubId(board.getBookclubId())
+                .content(board.getContent())
+                .createdAt(board.getCreatedAt().toString())
+                .title(board.getTitle())
+                .userId(board.getUserId())
+                .imageUrls(imageUrls)
+                .commentCount(commentCount)
+                .likeCount(likeCount)
+                .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
+                .build();
+
+        return ResponseEntity.ok(boardResponse);
     }
 
     //6.HOT post -> 인기있는 게시글 목록 반환
