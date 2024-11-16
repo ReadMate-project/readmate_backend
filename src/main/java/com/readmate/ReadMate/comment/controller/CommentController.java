@@ -127,8 +127,17 @@ public class CommentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    //4. 댓글 개수 반환
+    @GetMapping("/count/{boardId}")
+    @Operation(summary = "댓글 개수 조회", description = "특정 게시물의 댓글 개수를 반환하는 API")
+    public ResponseEntity<BasicResponse<Integer>> getCommentCount(@PathVariable("boardId") Long boardId) {
+        int commentCount = commentService.countCommentsByBoardId(boardId);
+        BasicResponse<Integer> response = BasicResponse.ofSuccess(commentCount);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
-    //4. 댓글 최신순 or 등록순으로 정렬
+
+    //5. 댓글 최신순 or 등록순으로 정렬
     @GetMapping("/{boardId}/comments")
     @Operation(summary = "댓글 목록 조회", description = "댓글 목록을 조회할 때 정렬 기준을 선택할 수 있습니다.")
     public ResponseEntity<BasicResponse<CommentResWithPageInfo>> getComments(

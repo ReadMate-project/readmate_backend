@@ -48,23 +48,31 @@ public class LikesSerivce {
 
         // 기존에 좋아요를 누른 기록이 있는지 조회
         Optional<Likes> existingLike = likesRepository.findByBoardIdAndUserId(boardId, userDetails.getUser().getUserId());
+
         if (existingLike.isPresent()) {
-            // 좋아요가 이미 눌린 경우 -> 좋아요 취소
-            likesRepository.delete(existingLike.get());
+            Likes like = existingLike.get();
 
-            Likes deletedLike = new Likes(existingLike.get().getLikeId(), boardId, userDetails.getUser().getUserId(), false);
+            if (like.getLiked()) {
+                // 좋아요를 누른 상태 -> 좋아요 취소
+                like.setLiked(false);
+            } else {
+                // 좋아요 취소 상태 -> 다시 좋아요
+                like.setLiked(true);
+            }
 
-            return deletedLike;
+            likesRepository.save(like); // 상태 업데이트
+            return like;
+
         } else {
-            // 좋아요가 눌려 있지 않은 경우 -> 좋아요 처리
+            // 좋아요가 눌려 있지 않은 경우 -> 새로운 좋아요 생성
             Likes newLike = new Likes(null, boardId, userDetails.getUser().getUserId(), true);
-
             return likesRepository.save(newLike);
         }
     }
 
+
     public int countLikesByBoardId(Long boardId) {
-        return likesRepository.countByBoardId(boardId);
+        return likesRepository.countByBoardIdAndLikedTrue(boardId);
     }
 
 }

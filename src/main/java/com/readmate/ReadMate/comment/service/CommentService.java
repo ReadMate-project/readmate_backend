@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,7 @@ public class CommentService {
         comment.setBoardId(boardId);
         comment.setUserId(userId);
         comment.setContent(commentRequest.getContent());
+        comment.setCreatedAt(LocalDateTime.now());
         return commentRepository.save(comment);
     }
 

@@ -49,8 +49,4 @@ public class Board {
         this.createdAt = LocalDateTime.now();
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        this.createdAt = LocalDateTime.now();
-    }
 }
