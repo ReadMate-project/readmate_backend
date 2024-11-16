@@ -13,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -31,4 +32,14 @@ public class LikesController {
         BasicResponse<Likes> response = BasicResponse.ofSuccess(updatedLike);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @GetMapping("/count/{boardId}")
+    @Operation(summary = "좋아요 개수 조회", description = "특정 게시물의 좋아요 개수를 반환하는 API")
+    public ResponseEntity<BasicResponse<Integer>> getLikeCount(@PathVariable("boardId") Long boardId) {
+        int likeCount = likesService.countLikesByBoardId(boardId);
+        BasicResponse<Integer> response = BasicResponse.ofSuccess(likeCount);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
 }
