@@ -19,10 +19,7 @@ import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -75,14 +72,14 @@ public class BoardService {
 
     //3. 게시판 별 내가 쓴 글 목록 조회
     public Page<Board> getBoardsByUserIdAndType(Long userId, BoardType boardType, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return boardRepository.findByUserIdAndBoardType(userId, boardType, pageable);
     }
 
-
     //4. 게시판 별 게시글 목록 조회
     public Page<Board> getBoardsByType(BoardType boardType, int page, int size, Long bookclubId) {
-        Pageable pageable = PageRequest.of(page, size);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         if (boardType == BoardType.CLUB_BOARD) {
             return boardRepository.findByBookclubId(bookclubId, pageable); // bookclubId를 사용하여 클럽 게시글 반환
@@ -97,7 +94,7 @@ public class BoardService {
     }
 
     public Optional<Board> findById(Long boardId) {
-        return boardRepository.findById(boardId); // 게시글 조회
+        return boardRepository.findById(boardId);
     }
 
     //6.날자별 에세이 조회 (캘린더)
@@ -167,7 +164,7 @@ public class BoardService {
         List<MVPResponse> mvpResponses = boards.stream().map(board -> {
 
                     // 좋아요와 댓글 수 조회
-                    int likeCount = likesRepository.countByBoardId(board.getBoardId());
+                    int likeCount = likesRepository.countByBoardIdAndLikedTrue(board.getBoardId());
                     int commentCount = commentRepository.countByBoardId(board.getBoardId());
 
                     // 게시글 작성자의 유저 정보 가져오기
@@ -207,6 +204,7 @@ public class BoardService {
         List<Board> boards = boardRepository.findTopBoardsByLikesAndComments(boardType, pageable);
         return new PageImpl<>(boards, pageable, boards.size());
     }
+
 
 
 }
