@@ -479,6 +479,10 @@ public class BoardController {
             int commentCount = commentService.countCommentsByBoardId(board.getBoardId());
             int likeCount = likesSerivce.countLikesByBoardId(board.getBoardId());
 
+            User user = userService.getUserById(board.getUserId());
+            String nickname = user.getNickname();
+            String profileImageUrl = user.getProfileImageUrl();
+
             return BoardResponse.builder()
                     .boardId(board.getBoardId())
                     .boardType(board.getBoardType())
@@ -488,6 +492,8 @@ public class BoardController {
                     .createdAt(board.getCreatedAt().toString())
                     .title(board.getTitle())
                     .userId(board.getUserId())
+                    .nickname(nickname)
+                    .profileImageUrl(profileImageUrl)
                     .imageUrls(imageUrls)
                     .commentCount(commentCount)
                     .likeCount(likeCount)
