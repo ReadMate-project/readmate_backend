@@ -20,5 +20,6 @@ public interface MyBookRepository extends JpaRepository<MyBook,Long> {
     // userId와 isbn13을 사용하여 특정 책을 조회
     MyBook findByUserIdAndIsbn13(Long userId, Long isbn13);
 
-
+    // userId와 delYn 조건을 사용하여 MyBook 엔티티 최신순 조회
+    List<MyBook> findByUserIdAndDelYnFalseOrderByLastReadDateDesc(Long userId);
 }

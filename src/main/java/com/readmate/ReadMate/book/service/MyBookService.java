@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class MyBookService {
     public List<MyBookResponse> getMyBooks(CustomUserDetails userDetails) {
         Long userId = userDetails.getUser().getUserId();
 
-        List<MyBook> myBookList = myBookRepository.findByUserIdAndDelYnFalse(userId);
+        List<MyBook> myBookList = myBookRepository.findByUserIdAndDelYnFalseOrderByLastReadDateDesc(userId);
         List<MyBookResponse> myBookResponseList = new ArrayList<>();
 
         for (MyBook myBook : myBookList){
@@ -49,7 +50,7 @@ public class MyBookService {
             MyBook newBook = MyBook.builder()
                     .isbn13(saveBook.getIsbn13())
                     .userId(user.getUser().getUserId())
-                    .lastReadDate(LocalDate.now())
+                    .lastReadDate(LocalDateTime.now())
                     .build();
             myBookRepository.save(newBook);
         }
@@ -68,13 +69,13 @@ public class MyBookService {
             myBook = MyBook.builder()
                     .isbn13(book.getIsbn13())
                     .userId(userDetails.getUser().getUserId())
-                    .lastReadDate(LocalDate.now())
+                    .lastReadDate(LocalDateTime.now())
                     .delYn(false)
                     .build();
             myBookRepository.save(myBook);
         } else if (!myBook.isDelYn()) {
             myBook.setDelYn(false);
-            myBook.setLastReadDate(LocalDate.now());
+            myBook.setLastReadDate(LocalDateTime.now());
             myBookRepository.save(myBook);
         } else {
             throw new CustomException(ErrorCode.BOOK_ALREADY_IN_LIBRARY);
@@ -95,4 +96,6 @@ public class MyBookService {
             throw new CustomException(ErrorCode.BOOK_NOT_IN_LIBRARY);
         }
     }
+
+
 }
