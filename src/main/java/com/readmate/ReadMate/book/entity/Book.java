@@ -3,6 +3,8 @@ package com.readmate.ReadMate.book.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Builder
 @Getter
@@ -39,5 +41,15 @@ public class Book {
     @Column(name = "del_yn", columnDefinition = "VARCHAR(1) default 'N'")
     @Builder.Default
     private String delYn = "N";
+
+    //검색 결과를 최신순으로 정렬하기 위해 필요
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
 
 }
