@@ -206,5 +206,34 @@ public class BoardService {
     }
 
 
+    public List<FeedResponse> getFeedsByBookId(long bookId) {
+        // board에서 해당하는 것 다 받아오기
+        List<Board> boardList = boardRepository.findByBookId(bookId); // 해당 책 ID에 대한 모든 피드 조회
+
+        // 최신순으로 정렬 (createdAt 기준 내림차순)
+        boardList.sort((board1, board2) -> board2.getCreatedAt().compareTo(board1.getCreatedAt()));
+
+        // Board -> FeedResponse로 변환
+        return boardList.stream().map(board -> {
+            // 유저 정보 조회
+            User user = userRepository.findById(board.getUserId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
+
+            // 책 정보를 BookService를 통해 가져오기
+            BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
+
+            // FeedResponse 생성
+            return new FeedResponse(
+                    board.getBoardId(),
+                    board.getTitle(),
+                    board.getContent(),
+                    board.getCreatedAt().toString(),
+                    user.getUserId(),
+                    user.getProfileImageUrl(),
+                    user.getNickname(),
+                    bookResponse
+            );
+        }).collect(Collectors.toList());
+    }
 
 }

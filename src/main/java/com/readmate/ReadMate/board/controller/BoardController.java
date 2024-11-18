@@ -552,6 +552,25 @@ public class BoardController {
         return ResponseEntity.ok(BasicResponse.ofSuccess(feedResponses));
     }
 
+    //책 ID로 에세이 조회
+    @GetMapping("/book/{bookId}")
+    @Operation(summary = " 책 ID 로 에세이 조회", description = "책 ISBN13 으로 에세이 목록 조회 API")
+    public ResponseEntity<BasicResponse<List<FeedResponse>>> getFeedsByBook(
+            @PathVariable long bookId) {
+
+
+        // 해당 책으로 작성한 모든 에세이 조회
+        List<FeedResponse> feedResponses = boardService.getFeedsByBookId(bookId);
+
+        // 피드가 없는 경우
+        if (feedResponses.isEmpty()) {
+            throw new CustomException(ErrorCode.NO_FEEDS_FOUND);
+        }
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess(feedResponses));
+    }
+
+
     // 북클럽 리더인지 확인하는 메서드 -> 공지사항땜에 필요
     private void validateLeader(Long bookclubId, CustomUserDetails userDetails) {
         List<BookClubMemberResponse> members = bookClubMemberService.findMembers(bookclubId, userDetails.getUser().getUserId(),false);
