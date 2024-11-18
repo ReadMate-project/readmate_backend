@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class MyBook {
     private Long isbn13;  // Book 엔티티의 isbn13을 참조
 
     @Column(name = "last_read_date")
-    private LocalDate lastReadDate;
+    private LocalDateTime lastReadDate;
 
     @Column(name = "del_yn")
     @Builder.Default

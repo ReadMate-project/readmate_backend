@@ -6,11 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class MyBookResponse {
     private Long myBookId;
     private Book book;
-    private LocalDate lastReadDate;
+    private LocalDateTime lastReadDate;
 }
