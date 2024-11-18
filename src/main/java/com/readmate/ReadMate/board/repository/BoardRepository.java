@@ -39,5 +39,7 @@ public interface BoardRepository  extends JpaRepository<Board, Long>, JpaSpecifi
 
 
     List<Board> findByBookclubIdAndBoardTypeAndCreatedAtBetween(Long bookClubId, BoardType boardType, LocalDateTime startOfWeek, LocalDateTime endOfWeek);
+
+    List<Board> findByBookId(long bookId);
 }
 
