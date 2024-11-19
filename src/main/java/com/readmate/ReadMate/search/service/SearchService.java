@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,11 +40,9 @@ public class SearchService { //북클럽과 게시판 글 통합해서 검색되
 
         // 1. 공지사항은 제외하고 검색
         boards = boardRepository.findAll(Specification.where(BoardSpecification.containsTitleOrContent(keyword, new ArrayList<>())));
-        System.out.println("Boards found: " + boards.size());
 
         if (userDetails instanceof CustomUserDetails) {
             Long userId = ((CustomUserDetails) userDetails).getUser().getUserId();
-            System.out.println("Authenticated user ID: " + userId);
 
             // 사용자가 소속된 북클럽 ID 리스트 가져오기
             List<Long> userBookClubIds = bookClubMemberService.findBookClubIdsByUserId(userId);
@@ -59,17 +58,19 @@ public class SearchService { //북클럽과 게시판 글 통합해서 검색되
                         .and(BoardSpecification.clubBoardIn(userBookClubIds))); // 북클럽 게시판도 포함
                 boards.addAll(clubBoards);
             }
-            System.out.println("Filtered boards: " + boards.size());
 
             bookClubs = bookClubRepository.findAll(Specification.where(BookClubSpecification.containsCategoryOrName(keyword))
                     .and(BookClubSpecification.bookClubIdIn(userBookClubIds)));
         } else {
-            System.out.println("Unauthenticated user");
             bookClubs = bookClubRepository.findAll(Specification.where(BookClubSpecification.containsCategoryOrName(keyword)));
         }
 
         books = bookRepository.findAll(BookSpecification.containsTitleOrAuthorOrDescriptionOrCategory(keyword));
-        System.out.println("Books found: " + books.size());
+
+        // 최신순 정렬
+        boards.sort(Comparator.comparing(Board::getCreatedAt).reversed());
+        bookClubs.sort(Comparator.comparing(BookClub::getCreatedAt).reversed());
+        books.sort(Comparator.comparing(Book::getCreatedAt).reversed());
 
         return new SearchResponse(boards, bookClubs, books);
     }
