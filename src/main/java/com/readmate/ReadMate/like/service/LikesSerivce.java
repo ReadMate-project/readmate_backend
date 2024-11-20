@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -73,6 +74,14 @@ public class LikesSerivce {
 
     public int countLikesByBoardId(Long boardId) {
         return likesRepository.countByBoardIdAndLikedTrue(boardId);
+    }
+
+    public List<Likes> getLikesByBoardId(Long boardId) {
+        return likesRepository.findByBoardIdAndLikedTrue(boardId);
+    }
+
+    public List<Likes> getAllLikes() {
+        return likesRepository.findAll();
     }
 
 }
