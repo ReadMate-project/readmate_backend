@@ -179,6 +179,12 @@ public class UserService {
         }
     }
 
+    // 사용자 저장
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
+
+
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }

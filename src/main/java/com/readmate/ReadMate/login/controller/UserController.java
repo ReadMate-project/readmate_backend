@@ -56,12 +56,10 @@ public class UserController {
     private String adminKey;
 
 
-    //1. 카카오톡 회원가입 및 로그인
-    //1.1 DB에 해당 유저의 정보가 없을 경우 -> 회원가입절차로 DB에 유저 정보 저장
-    //1.2 DB에 해당 유저의 정보가 있을 경우 -> 로그인
-    @PostMapping("/login/kakao")
-    @Operation(summary = "카카오 로그인", description = "이메일 유무에 따라 회원가입 또는 로그인을 처리")
-    public ResponseEntity<BasicResponse<Object>> kakaoLogin(
+    //1. 카카오톡 회원가입
+    @PostMapping("/signup/kakao")
+    @Operation(summary = "카카오 회원가입", description = "카카오 회원가입 처리")
+    public ResponseEntity<BasicResponse<Object>> kakaoSignup(
             @RequestParam(name = "code") String code) {
 
         try {
@@ -70,7 +68,7 @@ public class UserController {
             User user = userService.findByEmail(kakaoUser.getEmail());
 
             if (user == null) {
-                //1차적 회원가입 -> 카카오에서 주는 정보 저장
+                // 1차적 회원가입 -> 카카오에서 주는 정보 저장
                 User newUser = new User();
                 newUser.setKakaoId(kakaoUser.getKakaoId());
                 newUser.setEmail(kakaoUser.getEmail());
@@ -89,29 +87,11 @@ public class UserController {
 
                 return ResponseEntity.status(HttpStatus.OK)
                         .body(BasicResponse.ofSuccess(responseData, "회원가입이 필요합니다."));
-            } else {
-                // 기존 사용자 -> 로그인 처리
-                String refreshToken = tokenService.getRefreshToken(user);
-
-                if (refreshToken == null) {
-                    refreshToken = tokenService.createRefreshToken(user);
-                    tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
-                }
-
-                String newAccessToken = tokenService.renewAccessToken(refreshToken);
-
-                CustomUserDetails userDetails = new CustomUserDetails(user);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                // 응답 헤더에 토큰 추가
-                HttpHeaders headers = new HttpHeaders();
-                headers.set("Authorization", "Bearer " + newAccessToken + ", Refresh " + refreshToken);
-
-                return ResponseEntity.ok()
-                        .headers(headers)
-                        .body(BasicResponse.ofSuccess("로그인 성공"));
             }
+
+            // 이미 가입된 사용자인 경우
+            return ResponseEntity.badRequest()
+                    .body(BasicResponse.ofFailure("이미 회원가입된 사용자입니다.", HttpStatus.BAD_REQUEST));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(BasicResponse.ofFailure("처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
@@ -119,9 +99,9 @@ public class UserController {
     }
 
 
-    @PostMapping("/signup/kakao")
-    @Operation(summary = "카카오 회원가입", description = "닉네임과 좋아하는 장르를 추가로 저장하여 회원가입을 완료합니다.")
-    public ResponseEntity<BasicResponse<String>> kakaoSignup(
+    @PostMapping("/signup/kakao/step1")
+    @Operation(summary = "카카오 회원가입-추가정보 입력", description = "닉네임과 좋아하는 장르를 추가로 저장하여 회원가입을 완료 API")
+    public ResponseEntity<BasicResponse<String>> kakaoSignupStep1(
             @RequestBody KakaoSignupRequest kakaoSignupRequest) {
 
         try {
@@ -140,6 +120,48 @@ public class UserController {
             tokenService.saveRefreshToken(user, refreshToken);
 
             return ResponseEntity.ok(BasicResponse.ofSuccess("회원가입이 완료되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(BasicResponse.ofFailure("회원가입 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+
+    @GetMapping("/login/kakao")
+    @Operation(summary = "로그인", description = "로그인을 진행하는 API")
+    public ResponseEntity<BasicResponse<String>> kakaoLogin(
+            @RequestParam(name = "code") String code) {
+
+        try {
+            String accessToken = userService.getKakaoAccessToken(code);
+            User kakaoUser = userService.getKakaoUser(accessToken);
+            User user = userService.findByEmail(kakaoUser.getEmail());
+
+            if (user == null) {
+                return ResponseEntity.badRequest()
+                        .body(BasicResponse.ofFailure("사용자를 찾을 수 없습니다. 먼저 회원가입 과정을 진행하세요.", HttpStatus.BAD_REQUEST));
+            }
+
+            String refreshToken = tokenService.getRefreshToken(user);
+
+            if (refreshToken == null) {
+                refreshToken = tokenService.createRefreshToken(user);
+                tokenService.saveRefreshToken(user, refreshToken); // DB에 RefreshToken 저장
+            }
+
+            String newAccessToken = tokenService.renewAccessToken(refreshToken);
+
+            CustomUserDetails userDetails = new CustomUserDetails(user);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            HttpHeaders headers = new HttpHeaders();
+            //헤더에 refresh와 access 함께 보내줌
+            headers.set("Authorization", "Bearer " + newAccessToken + ", Refresh " + refreshToken);
+
+            BasicResponse<String> response = BasicResponse.ofSuccess("로그인 성공");
+            return ResponseEntity.ok().headers(headers).body(response);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(BasicResponse.ofFailure("회원가입 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
