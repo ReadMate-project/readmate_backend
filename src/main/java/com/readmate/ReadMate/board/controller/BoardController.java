@@ -465,14 +465,59 @@ public class BoardController {
     }
 
     //6.HOT post -> 인기있는 게시글 목록 반환
-    @GetMapping("/hotpost")
-    @Operation(summary = "인기있는 게시글 목록 조회", description = "좋아요, 댓글 수, 생성일 순으로 게시글 목록 조회 API")
+    @GetMapping("/hotpost/board")
+    @Operation(summary = "인기있는 자유 게시글 목록 조회", description = "좋아요, 댓글 수, 생성일 순으로 게시글 목록 조회 API")
     public ResponseEntity<BasicResponse<List<BoardResponse>>> getTopLikedAndCommentedBoards(
             @RequestParam("page") int page,
             @RequestParam("size") int size) {
 
         //로그인 안한 상태 + 볼 수 있는 게시판이 자유게시판 뿐
         Page<Board> boardPage = boardService.getTopBoardsByLikesAndComments(BoardType.BOARD, page, size);
+
+        List<BoardResponse> boardResponseList = boardPage.getContent().stream().map(board -> {
+            List<String> imageUrls = imageService.findImageUrlsByBoardId(board.getBoardId());
+            int commentCount = commentService.countCommentsByBoardId(board.getBoardId());
+            int likeCount = likesSerivce.countLikesByBoardId(board.getBoardId());
+
+            User user = userService.getUserById(board.getUserId());
+            String nickname = user.getNickname();
+            String profileImageUrl = user.getProfileImageUrl();
+
+            return BoardResponse.builder()
+                    .boardId(board.getBoardId())
+                    .boardType(board.getBoardType())
+                    .bookId(board.getBookId())
+                    .bookclubId(board.getBookclubId())
+                    .content(board.getContent())
+                    .createdAt(board.getCreatedAt().toString())
+                    .title(board.getTitle())
+                    .userId(board.getUserId())
+                    .nickname(nickname)
+                    .profileImageUrl(profileImageUrl)
+                    .imageUrls(imageUrls)
+                    .commentCount(commentCount)
+                    .likeCount(likeCount)
+                    .build();
+        }).collect(Collectors.toList());
+
+        PageInfo pageInfo = new PageInfo(
+                boardPage.getNumber(),
+                boardPage.getSize(),
+                (int) boardPage.getTotalElements(),
+                boardPage.getTotalPages()
+        );
+
+        BasicResponse<List<BoardResponse>> response = BasicResponse.ofSuccessWithPageInfo(boardResponseList, pageInfo);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/hotpost/essay")
+    @Operation(summary = "인기있는 에세이 목록 조회", description = "좋아요, 댓글 수, 생성일 순으로 게시글 목록 조회 API")
+    public ResponseEntity<BasicResponse<List<BoardResponse>>> getTopLikedAndCommentedEssay(
+            @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+
+        Page<Board> boardPage = boardService.getTopBoardsByLikesAndComments(BoardType.FEED, page, size);
 
         List<BoardResponse> boardResponseList = boardPage.getContent().stream().map(board -> {
             List<String> imageUrls = imageService.findImageUrlsByBoardId(board.getBoardId());
