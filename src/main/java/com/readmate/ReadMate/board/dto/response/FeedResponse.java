@@ -15,4 +15,6 @@ public class FeedResponse {
     private String profileImageUrl;
     private String nickname;
     private BookResponse bookResponse;
+    private int likeCount;
+    private int commentCount;
 }
