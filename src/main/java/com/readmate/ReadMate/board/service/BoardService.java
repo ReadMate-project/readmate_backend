@@ -98,16 +98,18 @@ public class BoardService {
     }
 
     //6.날자별 에세이 조회 (캘린더)
-    public List<CalendarBookResponse> getBooksByMonth(int year ,int month) {
+    public List<CalendarBookResponse> getBooksByMonth(final long userId, int year ,int month) {
         LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.toLocalDate().lengthOfMonth());
 
-        List<Board> boardList = boardRepository.findByCreatedAtBetween(startOfMonth, endOfMonth); // 해당 월의 피드 조회
+        //유저가 작성한 게시글 중에 해당 월의 피드 조회
+        List<Board> boardList = boardRepository.findByUserIdAndCreatedAtBetweenAndBoardType(userId, startOfMonth, endOfMonth, BoardType.FEED);
 
         // 날짜별로 그룹화하여 책 정보를 저장할 맵 생성
         Map<String, List<CalendarBookResponse.BookInfo>> bookMapByDate = new HashMap<>();
 
         boardList.forEach(board -> {
+            System.out.println(board.getBoardId() + "  : "+ board.getBookId()); //null 이 들어감
             String date = board.getCreatedAt().toLocalDate().toString();
             Book book = bookRepository.findByIsbn13(board.getBookId())
                     .orElseThrow(() -> new CustomException(ErrorCode.BOOK_NOT_FOUND)); // 책 정보 가져오기

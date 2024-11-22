@@ -562,11 +562,12 @@ public class BoardController {
     @GetMapping("/calendar/books")
     @Operation(summary = "캘린더에 표시할 책 정보 조회", description = "특정 날짜 범위 내에서 작성된 피드에 해당하는 책 정보를 반환합니다.")
     public ResponseEntity<BasicResponse<List<CalendarBookResponse>>> getBooksForCalendar(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("year") int year,
             @RequestParam("month") int month) {
 
         // 날짜 범위에 해당하는 책 정보를 가져옴
-        List<CalendarBookResponse> books = boardService.getBooksByMonth(year, month);
+        List<CalendarBookResponse> books = boardService.getBooksByMonth(userDetails.getUser().getUserId(),year, month);
 
         BasicResponse<List<CalendarBookResponse>> response = BasicResponse.ofSuccess(books);
         return new ResponseEntity<>(response, HttpStatus.OK);
