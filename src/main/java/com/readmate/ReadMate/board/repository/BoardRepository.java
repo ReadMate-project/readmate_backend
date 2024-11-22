@@ -20,11 +20,9 @@ public interface BoardRepository  extends JpaRepository<Board, Long>, JpaSpecifi
     Page<Board> findByUserIdAndBoardType(Long userId, BoardType boardType, Pageable pageable);
     Page<Board> findByBoardType(BoardType boardType, Pageable pageable);
     Page<Board> findByBookclubId(Long bookclubId, Pageable pageable);
-    List<Board> findByCreatedAtBetween(LocalDateTime startOfMonth, LocalDateTime endOfMonth);
+    List<Board> findByUserIdAndCreatedAtBetweenAndBoardType(final long userId, LocalDateTime startOfMonth, LocalDateTime endOfMonth, BoardType boardType);
 
     List<Board> findByCreatedAtBetweenAndBoardType(LocalDateTime startOfDay, LocalDateTime endOfDay, BoardType boardType);
-
-    List<Board> findByBookclubIdAndBoardType(Long bookclubId, BoardType boardType);
 
 
     @Query("SELECT b FROM Board b LEFT JOIN Likes l ON b.BoardId = l.boardId AND l.liked = true " +
