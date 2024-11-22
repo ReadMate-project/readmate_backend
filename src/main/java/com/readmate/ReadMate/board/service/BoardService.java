@@ -12,9 +12,11 @@ import com.readmate.ReadMate.book.repository.BookRepository;
 import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.book.service.MyBookService;
 import com.readmate.ReadMate.comment.repository.CommentRepository;
+import com.readmate.ReadMate.comment.service.CommentService;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.like.repository.LikesRepository;
+import com.readmate.ReadMate.like.service.LikesSerivce;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
@@ -40,6 +42,7 @@ public class BoardService {
     private final BookRepository bookRepository;
     private final LikesRepository likesRepository;
     private final CommentRepository commentRepository;
+
     //0.게시판 작성
     public Board saveBoard(CustomUserDetails user,Board board) {
         // 내 서재에 책 추가
@@ -137,6 +140,9 @@ public class BoardService {
             User user = userRepository.findByUserId(board.getUserId())
                     .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
+            int likeCount = likesRepository.countByBoardIdAndLikedTrue(board.getBoardId());
+            int commentCount = commentRepository.countByBoardId(board.getBoardId());
+
             // BookResponse 생성 (ISBN 기반)
             BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
 
@@ -149,7 +155,9 @@ public class BoardService {
                     user.getUserId(),
                     user.getProfileImageUrl(),
                     user.getNickname(),
-                    bookResponse
+                    bookResponse,
+                    likeCount,
+                    commentCount
             );
         }).collect(Collectors.toList());
     }
@@ -224,6 +232,10 @@ public class BoardService {
             // 책 정보를 BookService를 통해 가져오기
             BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
 
+            // 좋아요와 댓글 수 조회
+            int likeCount = likesRepository.countByBoardIdAndLikedTrue(board.getBoardId());
+            int commentCount = commentRepository.countByBoardId(board.getBoardId());
+
             // FeedResponse 생성
             return new FeedResponse(
                     board.getBoardId(),
@@ -233,7 +245,9 @@ public class BoardService {
                     user.getUserId(),
                     user.getProfileImageUrl(),
                     user.getNickname(),
-                    bookResponse
+                    bookResponse,
+                    likeCount,
+                    commentCount
             );
         }).collect(Collectors.toList());
     }
