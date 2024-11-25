@@ -10,6 +10,9 @@ import com.readmate.ReadMate.board.dto.response.FeedResponse;
 import com.readmate.ReadMate.board.entity.Board;
 import com.readmate.ReadMate.board.entity.BoardType;
 import com.readmate.ReadMate.board.service.BoardService;
+import com.readmate.ReadMate.book.dto.res.BookResponse;
+import com.readmate.ReadMate.book.entity.Book;
+import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.bookclub.bookClubMember.dto.BookClubMemberResponse;
 import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMember;
 import com.readmate.ReadMate.bookclub.bookClubMember.entity.BookClubMemberRole;
@@ -61,6 +64,7 @@ public class BoardController {
     private final LikesSerivce likesSerivce;
     private final CommentService commentService;
     private final UserService userService;
+    private final BookService bookService;
 
 
     //0.게시판 작성
@@ -300,6 +304,20 @@ public class BoardController {
             String nickname = user.getNickname();
             String profileImageUrl = user.getProfileImageUrl();
 
+            // 책 정보 가져오기
+            String bookTitle = null;
+            String bookAuthor = null;
+            String bookCover = null;
+
+            if (board.getBookId() != null) {
+                BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
+                if (bookResponse != null) {
+                    bookTitle = bookResponse.getTitle();
+                    bookAuthor = bookResponse.getAuthor();
+                    bookCover = bookResponse.getBookCover();
+                }
+            }
+
             return BoardResponse.builder()
                     .boardId(board.getBoardId())
                     .boardType(board.getBoardType())
@@ -314,6 +332,9 @@ public class BoardController {
                     .likeCount(likeCount)
                     .nickname(nickname)
                     .profileImageUrl(profileImageUrl)
+                    .bookTitle(bookTitle)
+                    .bookAuthor(bookAuthor)
+                    .bookCover(bookCover)
                     .build();
         }).collect(Collectors.toList());
 
@@ -327,6 +348,7 @@ public class BoardController {
         BasicResponse<List<BoardResponse>> response = BasicResponse.ofSuccessWithPageInfo(boardResponseList, pageInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
 
     //4. 게시판 별 게시글 목록 조회
@@ -381,6 +403,20 @@ public class BoardController {
             String nickname = user.getNickname();
             String profileImageUrl = user.getProfileImageUrl();
 
+            // 책 정보 가져오기
+            String bookTitle = null;
+            String bookAuthor = null;
+            String bookCover = null;
+
+            if (board.getBookId() != null) {
+                BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
+                if (bookResponse != null) {
+                    bookTitle = bookResponse.getTitle();
+                    bookAuthor = bookResponse.getAuthor();
+                    bookCover = bookResponse.getBookCover();
+                }
+            }
+
             return BoardResponse.builder()
                     .boardId(board.getBoardId())
                     .boardType(board.getBoardType())
@@ -395,6 +431,9 @@ public class BoardController {
                     .likeCount(likeCount)
                     .nickname(nickname)
                     .profileImageUrl(profileImageUrl)
+                    .bookTitle(bookTitle)
+                    .bookAuthor(bookAuthor)
+                    .bookCover(bookCover)
                     .build();
         }).collect(Collectors.toList());
 
@@ -441,6 +480,20 @@ public class BoardController {
         int commentCount = commentService.countCommentsByBoardId(board.getBoardId());
         int likeCount = likesSerivce.countLikesByBoardId(board.getBoardId());
 
+        // 책 정보 가져오기
+        String bookTitle = null;
+        String bookAuthor = null;
+        String bookCover = null;
+
+        if (board.getBookId() != null) {
+            BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
+            if (bookResponse != null) {
+                bookTitle = bookResponse.getTitle();
+                bookAuthor = bookResponse.getAuthor();
+                bookCover = bookResponse.getBookCover();
+            }
+        }
+
         User user = userService.getUserById(board.getUserId());
         String nickname = user.getNickname();
         String profileImageUrl = user.getProfileImageUrl();
@@ -459,6 +512,9 @@ public class BoardController {
                 .likeCount(likeCount)
                 .nickname(nickname)
                 .profileImageUrl(profileImageUrl)
+                .bookTitle(bookTitle)
+                .bookAuthor(bookAuthor)
+                .bookCover(bookCover)
                 .build();
 
         return ResponseEntity.ok(boardResponse);
@@ -528,6 +584,21 @@ public class BoardController {
             String nickname = user.getNickname();
             String profileImageUrl = user.getProfileImageUrl();
 
+            // 책 정보 가져오기
+            String bookTitle = null;
+            String bookAuthor = null;
+            String bookCover = null;
+
+            if (board.getBookId() != null) {
+                BookResponse bookResponse = bookService.getBookByIsbn(board.getBookId());
+                if (bookResponse != null) {
+                    bookTitle = bookResponse.getTitle();
+                    bookAuthor = bookResponse.getAuthor();
+                    bookCover = bookResponse.getBookCover();
+                }
+            }
+
+
             return BoardResponse.builder()
                     .boardId(board.getBoardId())
                     .boardType(board.getBoardType())
@@ -542,6 +613,9 @@ public class BoardController {
                     .imageUrls(imageUrls)
                     .commentCount(commentCount)
                     .likeCount(likeCount)
+                    .bookTitle(bookTitle)
+                    .bookAuthor(bookAuthor)
+                    .bookCover(bookCover)
                     .build();
         }).collect(Collectors.toList());
 
