@@ -25,4 +25,7 @@ public class BoardResponse {
     private int likeCount;
     private String nickname;
     private String profileImageUrl;
+    private String bookTitle;
+    private String bookAuthor;
+    private String bookCover;
 }

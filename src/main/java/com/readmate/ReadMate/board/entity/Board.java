@@ -35,7 +35,7 @@ public class Board {
 
     //게시판 본문에 해당하는 내용
     //사진은 따로 Image로 구현할거임
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "created_at")
