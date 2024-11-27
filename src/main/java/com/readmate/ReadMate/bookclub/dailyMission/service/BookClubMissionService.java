@@ -149,7 +149,7 @@ public class BookClubMissionService {
 
         // 미션 완료 처리
         DailyMissionCompletion completion = DailyMissionCompletion.builder()
-                .dailyMissionId(dailyMissionId)
+                .dailyMissionId(dailyMission.getMissionId())
                 .userId(userId)
                 .completionDate(LocalDate.now())  // 현재 날짜로 완료 날짜 설정
                 .build();

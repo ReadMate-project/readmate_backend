@@ -13,6 +13,8 @@ import java.util.Optional;
 @Repository
 public interface BookClubChallengeRepository extends JpaRepository<BookClubChallenge,Long> {
 
+
+
     @Query("SELECT c FROM BookClubChallenge c WHERE c.bookClubId = :bookClubId AND c.delYn = false AND (c.startDate <= :date AND c.endDate >= :date)")
     Optional<BookClubChallenge> findCurrentChallengeByBookClubIdAndDate(@Param("bookClubId") Long bookClubId, @Param("date") LocalDate date);
 
@@ -23,5 +25,6 @@ public interface BookClubChallengeRepository extends JpaRepository<BookClubChall
     List<BookClubChallenge> findAllByDelYnFalse();
 
     List<BookClubChallenge>findByIsbn13(long isbn13);
+
 
 }
