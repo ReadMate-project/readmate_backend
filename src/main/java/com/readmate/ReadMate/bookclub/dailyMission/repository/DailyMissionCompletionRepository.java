@@ -14,4 +14,5 @@ public interface DailyMissionCompletionRepository extends JpaRepository<DailyMis
     List<DailyMissionCompletion> findAllByDailyMissionIdAndCompletionDate(Long dailyMissionId, LocalDate completionDate);
     boolean existsByDailyMissionIdAndUserId(final long dailyMissionId, final long userId);
 
+    void deleteByDailyMissionId(Long missionId);
 }

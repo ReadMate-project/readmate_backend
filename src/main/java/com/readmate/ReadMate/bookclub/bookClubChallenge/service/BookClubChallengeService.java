@@ -116,14 +116,10 @@ public class BookClubChallengeService {
                             .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CLUB));
 
                     // 해당 bookClubId로 오늘의 Challenge 조회
-                    Optional<BookClubChallenge> optionalBookClubChallenge = bookClubChallengeRepository
-                            .findCurrentChallengeByBookClubIdAndDate(bookClub.getBookClubId(), today);
+                    BookClubChallenge bookClubChallenge = bookClubChallengeRepository
+                            .findCurrentChallengeByBookClubIdAndDate(bookClub.getBookClubId(), today)
+                            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
-                    if (optionalBookClubChallenge.isEmpty()) {
-                        return null;
-                    }
-
-                    BookClubChallenge bookClubChallenge = optionalBookClubChallenge.get();
 
                     // Challenge에 대한 도서 정보 조회
                     BookResponse bookResponse = bookService.getBookByIsbn(bookClubChallenge.getIsbn13());
