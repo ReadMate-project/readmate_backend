@@ -2,7 +2,6 @@ package com.readmate.ReadMate.bookclub.bookClubChallenge.controller;
 
 import com.readmate.ReadMate.bookclub.bookClubChallenge.service.BookClubChallengeService;
 import com.readmate.ReadMate.bookclub.dailyMission.dto.ChallengeResponse;
-import com.readmate.ReadMate.bookclub.dailyMission.entity.DailyMission;
 import com.readmate.ReadMate.bookclub.dailyMission.service.BookClubMissionService;
 import com.readmate.ReadMate.common.message.BasicResponse;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

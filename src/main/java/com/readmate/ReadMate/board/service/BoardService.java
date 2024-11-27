@@ -11,18 +11,22 @@ import com.readmate.ReadMate.book.entity.Book;
 import com.readmate.ReadMate.book.repository.BookRepository;
 import com.readmate.ReadMate.book.service.BookService;
 import com.readmate.ReadMate.book.service.MyBookService;
+import com.readmate.ReadMate.bookclub.bookClubChallenge.entity.BookClubChallenge;
+import com.readmate.ReadMate.bookclub.bookClubChallenge.repository.BookClubChallengeRepository;
+import com.readmate.ReadMate.bookclub.dailyMission.entity.DailyMission;
+import com.readmate.ReadMate.bookclub.dailyMission.repository.DailyMissionCompletionRepository;
+import com.readmate.ReadMate.bookclub.dailyMission.repository.DailyMissionRepository;
 import com.readmate.ReadMate.comment.repository.CommentRepository;
-import com.readmate.ReadMate.comment.service.CommentService;
 import com.readmate.ReadMate.common.exception.CustomException;
 import com.readmate.ReadMate.common.exception.enums.ErrorCode;
 import com.readmate.ReadMate.like.repository.LikesRepository;
-import com.readmate.ReadMate.like.service.LikesSerivce;
 import com.readmate.ReadMate.login.entity.User;
 import com.readmate.ReadMate.login.repository.UserRepository;
 import com.readmate.ReadMate.login.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -42,9 +46,13 @@ public class BoardService {
     private final BookRepository bookRepository;
     private final LikesRepository likesRepository;
     private final CommentRepository commentRepository;
+    private final DailyMissionCompletionRepository dailyMissionCompletionRepository;
+    private final BookClubChallengeRepository bookClubChallengeRepository;
+    private final DailyMissionRepository dailyMissionRepository;
+
 
     //0.게시판 작성
-    public Board saveBoard(CustomUserDetails user,Board board) {
+    public Board saveBoard(CustomUserDetails user, Board board) {
         // 내 서재에 책 추가
         if (board.getBookId() != null) {
             // ISBN13을 사용해 도서 정보를 조회하고, 없으면 Aladin API로 저장
@@ -63,15 +71,41 @@ public class BoardService {
         return boardRepository.findById(boardId);
     }
 
-    //2.게시판 삭제
+    @Transactional
     public boolean deleteBoard(Long boardId) {
-        if (boardRepository.existsById(boardId)) {
-            boardRepository.deleteById(boardId);
-            return true;
-        } else {
+        // 게시판 존재 여부 확인
+        Optional<Board> board = boardRepository.findById(boardId);
+        if (board.isEmpty()) {
             return false;
         }
+
+        // 1. Board에서 BookClubId 조회
+        Long bookClubId = board.get().getBookclubId();
+
+        // 2. BookClubChallenge에서 ChallengeId 조회
+        List<BookClubChallenge> bookClubChallenges = bookClubChallengeRepository.findAllByBookClubId(bookClubId);
+        if (bookClubChallenges.isEmpty()) {
+            boardRepository.deleteById(boardId); // Challenge가 없으면 Board만 삭제
+            return true;
+        }
+
+        // 3. ChallengeId를 통해 DailyMission 가져오기
+        for (BookClubChallenge bookClubChallenge : bookClubChallenges) {
+            Long challengeId = bookClubChallenge.getChallengeId();
+
+            // 4. ChallengeId를 사용해 DailyMission 가져오기
+            List<DailyMission> dailyMissions = dailyMissionRepository.findAllByChallengeId(challengeId);
+            for (DailyMission dailyMission : dailyMissions) {
+                // 5. DailyMissionCompletion 삭제
+                dailyMissionCompletionRepository.deleteByDailyMissionId(dailyMission.getMissionId());
+            }
+        }
+
+        boardRepository.deleteById(boardId);
+
+        return true;
     }
+
 
     //3. 게시판 별 내가 쓴 글 목록 조회
     public Page<Board> getBoardsByUserIdAndType(Long userId, BoardType boardType, int page, int size) {
@@ -101,7 +135,7 @@ public class BoardService {
     }
 
     //6.날자별 에세이 조회 (캘린더)
-    public List<CalendarBookResponse> getBooksByMonth(final long userId, int year ,int month) {
+    public List<CalendarBookResponse> getBooksByMonth(final long userId, int year, int month) {
         LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.toLocalDate().lengthOfMonth());
 
@@ -112,7 +146,7 @@ public class BoardService {
         Map<String, List<CalendarBookResponse.BookInfo>> bookMapByDate = new HashMap<>();
 
         boardList.forEach(board -> {
-            System.out.println(board.getBoardId() + "  : "+ board.getBookId()); //null 이 들어감
+            System.out.println(board.getBoardId() + "  : " + board.getBookId()); //null 이 들어감
             String date = board.getCreatedAt().toLocalDate().toString();
             Book book = bookRepository.findByIsbn13(board.getBookId())
                     .orElseThrow(() -> new CustomException(ErrorCode.BOOK_NOT_FOUND)); // 책 정보 가져오기
@@ -250,6 +284,6 @@ public class BoardService {
                     commentCount
             );
         }).collect(Collectors.toList());
-    }
 
+    }
 }

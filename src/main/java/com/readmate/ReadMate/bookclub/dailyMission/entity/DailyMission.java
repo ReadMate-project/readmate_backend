@@ -1,5 +1,6 @@
 package com.readmate.ReadMate.bookclub.dailyMission.entity;
 
+import com.readmate.ReadMate.bookclub.bookClubChallenge.entity.BookClubChallenge;
 import jakarta.persistence.*;
 import lombok.*;
 
